@@ -53,8 +53,9 @@ private:
     Vector3D start;
     Vector3D end;
 
-    double a1, b1, c1, d1; // a1*x + b1*y + c1*z + d1 = 0
-    double a2, b2, c2, d2; // a2*x + b2*y + c2*z + d2 = 0
+    // line equation as intersection of two surface
+    double a1, b1, c1, d1; // a1*x + b1*y + c1*z + d1 = 0 - surface №1
+    double a2, b2, c2, d2; // a2*x + b2*y + c2*z + d2 = 0 - surface №2
 
 public:
     Segment3D(Vector3D _start, Vector3D _end) : start(_start), end(_end)
