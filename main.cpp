@@ -141,11 +141,25 @@ ostream& operator<<(ostream &out, const Segment3D &s)
 class Matrix3D
 {
 private:
-    double det_M2x2(double a11, double a12, double a21, double a22) { return a11 * a22 - a21 * a12; }
-    //double det_M2x2(double a[2][2]) { return a[0][0] * a[1][1] - a[1][0] * a[0][1]; }
-    //double det_M2x2(double a[4]) { return a[0] * a[3] - a[2] * a[1]; }
-public:
+    Vector3D line1, line2, line3;
 
+    double det_2(double a11, double a12,
+                 double a21, double a22) { return a11 * a22 - a21 * a12; }
+    double det_3(double a11, double a12, double a13,
+                 double a21, double a22, double a23,
+                 double a31, double a32, double a33)
+    { return a11 * det_2(a22, a23, a32, a33) - a12 * det_2(a21, a23, a31, a33) + a13 * det_2(a21, a22, a31, a32); }
+
+public:
+    Matrix3D(Vector3D v1, Vector3D v2, Vector3D v3) : line1(v1), line2(v2), line3(v3)
+    {}
+
+    double det()
+    {
+        return det_3(line1.getX(), line1.getY(), line1.getZ(),
+                     line2.getX(), line2.getY(), line2.getZ(),
+                     line3.getX(), line3.getY(), line3.getZ());
+    }
 };
 
 int Intersect(Segment3D s1, Segment3D s2, Vector3D *cross)
@@ -153,6 +167,7 @@ int Intersect(Segment3D s1, Segment3D s2, Vector3D *cross)
     if (s1.isCollinearity(s2.getStart()) && s1.isCollinearity(s2.getEnd())) return 1;
     // TODO: не лежат на одной плоскости
     // TODO: параллельны
+    // TODO: точка пересечения лежит за границами сегментов
 
     return 0;
 }
