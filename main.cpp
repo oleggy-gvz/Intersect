@@ -129,6 +129,7 @@ public:
     }
     Vector3D getStart() const { return start; }
     Vector3D getEnd() const { return end; }
+    Vector3D getDirection() const { return direction; }
     friend ostream& operator<<(ostream &, const Segment3D &);
 };
 
@@ -164,9 +165,13 @@ public:
 
 int Intersect(Segment3D s1, Segment3D s2, Vector3D *cross)
 {
-    if (s1.isCollinearity(s2.getStart()) && s1.isCollinearity(s2.getEnd())) return 1;
-    // TODO: не лежат на одной плоскости
+    if (s1.isCollinearity(s2.getStart()) && s1.isCollinearity(s2.getEnd())) return 1; // lines is collinear
+
+    Matrix3D m(s2.getStart() - s1.getStart(), s1.getDirection(), s2.getDirection());
+    if (m.det() != 0) return 2; // lines do not lie in a common surface
+
     // TODO: параллельны
+
     // TODO: точка пересечения лежит за границами сегментов
 
     return 0;
@@ -186,8 +191,7 @@ int main()
     cout << "segment1 = " << s1 << endl;
     cout << "segment2 = " << s2 << endl;
 
-    int res;
-    res = Intersect(s1, s2, &point);
+    int res = Intersect(s1, s2, &point);
 
     switch(res)
     {
@@ -200,7 +204,7 @@ int main()
         break;
 
     case 2:
-        cout << "no solutions: " << endl;
+        cout << "no intersection: lines do not lie in a common surface" << endl;
         break;
 
     case 3:
