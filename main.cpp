@@ -33,7 +33,7 @@ public:
 
     Vector3D vector_multiplication(const Vector3D &v)  { Vector3D tmp(det_2(Y, Z, v.Y, v.Z), -det_2(X, Z, v.X, v.Z), det_2(X, Y, v.X, v.Y)); return tmp; }
     double scalar_multiplication(const Vector3D &v) { return X * v.getX() + Y * v.getY() + Z * v.getZ(); }
-    double mixed_multiplication(Vector3D &v1, const Vector3D &v2)  { Vector3D tmp = v1.vector_multiplication(v2); return scalar_multiplication(tmp); }
+    double mixed_multiplication(const Vector3D &v1, const Vector3D &v2)  { Vector3D v12(v1); return scalar_multiplication(v12.vector_multiplication(v2)); }
     bool isCollinearity(const Vector3D &v)
     {
         bool eqv_XY = (v.getX() == 0 || v.getY() == 0) ? true : (X / v.getX()) == (Y / v.getY());
@@ -155,6 +155,11 @@ int main()
 
     s1 = {{1, 1, 0}, {2, 2, 0}};
     s2 = {{-3, -3, 0}, {-4, -4, 0}};
+    printResultIntersect(s1, s2);
+    cout << endl;
+
+    s1 = {{1, 1, 0}, {2, 2, 0}};
+    s2 = {{2, 1, 0}, {3, 2, 0}};
     printResultIntersect(s1, s2);
     cout << endl;
 
