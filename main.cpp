@@ -23,22 +23,18 @@ private:
     double det_2(double a11, double a12, double a21, double a22) { return a11 * a22 - a21 * a12; }
 public:
     Vector3D() : X(0), Y(0), Z(0) {}
-    //Vector3D(const Vector3D &v) : X(v.getX()), Y(v.getY()), Z(v.getZ()) {}
+    //Vector3D(const Vector3D &v) : X(v.X), Y(v.Y), Z(v.Z) {}
     Vector3D(double _X, double _Y, double _Z) : X(_X), Y(_Y), Z(_Z) {}
-
-    double getX() { return X; }
-    double getY() { return Y; }
-    double getZ() { return Z; }
     bool isNull() { return X == 0 && Y == 0 && Z == 0; }
 
     Vector3D vector_multiplication(Vector3D v)  { Vector3D tmp(det_2(Y, Z, v.Y, v.Z), -det_2(X, Z, v.X, v.Z), det_2(X, Y, v.X, v.Y)); return tmp; }
-    double scalar_multiplication(Vector3D v) { return X * v.getX() + Y * v.getY() + Z * v.getZ(); }
+    double scalar_multiplication(Vector3D v) { return X * v.X + Y * v.Y + Z * v.Z; }
     double mixed_multiplication(Vector3D v1, Vector3D v2)  { return scalar_multiplication(v1.vector_multiplication(v2)); }
     bool isCollinearity(Vector3D v)
     {
-        bool eqv_XY = (v.getX() == 0 || v.getY() == 0) ? true : (X / v.getX()) == (Y / v.getY());
-        bool eqv_XZ = (v.getX() == 0 || v.getZ() == 0) ? true : (X / v.getX()) == (Z / v.getZ());
-        bool eqv_YZ = (v.getY() == 0 || v.getZ() == 0) ? true : (Y / v.getY()) == (Z / v.getZ());
+        bool eqv_XY = (v.X == 0 || v.Y == 0) ? true : (X / v.X) == (Y / v.Y);
+        bool eqv_XZ = (v.X == 0 || v.Z == 0) ? true : (X / v.X) == (Z / v.Z);
+        bool eqv_YZ = (v.Y == 0 || v.Z == 0) ? true : (Y / v.Y) == (Z / v.Z);
         return eqv_XY && eqv_XZ && eqv_YZ;
     }
 
@@ -63,31 +59,27 @@ class Segment3D
 private:
     Vector3D start;
     Vector3D end;
-    Vector3D direction;
 
 public:
-    Segment3D() : start({0,0,0}), end({1,1,1}), direction(end - start) {}
-    Segment3D(Vector3D _start, Vector3D _end) : start(_start), end(_end), direction(end - start)
+    Segment3D() : start({0,0,0}), end({1,1,1}) {}
+    Segment3D(Vector3D _start, Vector3D _end) : start(_start), end(_end)
     {
-        if (direction.isNull()) throw Exception("beginning and end of line must be different points");
+        if (getDirection().isNull()) throw Exception("beginning and end of line must be different points");
     }
-
-    Vector3D getStart() { return start; }
-    Vector3D getEnd() { return end; }
-    Vector3D getDirection() { return direction; }
 
     bool isCollinearity(Segment3D line) // belong to a line of segment
     {
-        Vector3D point1 = line.getStart() - start;
-        Vector3D point2 = line.getEnd() - start;
-        return point1.isCollinearity(direction) && point2.isCollinearity(direction);
+        Vector3D point1 = line.start - start;
+        Vector3D point2 = line.end - start;
+        return point1.isCollinearity(getDirection()) && point2.isCollinearity(getDirection());
     }
+    Vector3D getDirection() { return end - start; };
 
-    bool isParallel(Segment3D line) { return direction.isCollinearity(line.getDirection()); }
+    bool isParallel(Segment3D line) { return getDirection().isCollinearity(line.getDirection()); }
     bool isCoplanarity(Segment3D line) // belong to a common surface
     {
-        Vector3D vec = line.getStart() - start;
-        return vec.mixed_multiplication(direction, line.direction) == 0;
+        Vector3D vec = line.start - start;
+        return vec.mixed_multiplication(getDirection(), line.getDirection()) == 0;
     }
 
     friend ostream& operator<<(ostream &, Segment3D);
