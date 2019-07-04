@@ -33,9 +33,9 @@ public:
     double mixed_multi(Vector3D v1, Vector3D v2)  { return scalar_multi(v1 * v2); }
     bool isCollinearity(Vector3D v)
     {
-        bool eqv_XY = (v.X == 0 || v.Y == 0) ? true : (X / v.X) == (Y / v.Y);
-        bool eqv_XZ = (v.X == 0 || v.Z == 0) ? true : (X / v.X) == (Z / v.Z);
-        bool eqv_YZ = (v.Y == 0 || v.Z == 0) ? true : (Y / v.Y) == (Z / v.Z);
+        bool eqv_XY = (v.X == 0 || v.Y == 0) ? true : X / v.X == Y / v.Y;
+        bool eqv_XZ = (v.X == 0 || v.Z == 0) ? true : X / v.X == Z / v.Z;
+        bool eqv_YZ = (v.Y == 0 || v.Z == 0) ? true : Y / v.Y == Z / v.Z;
         return eqv_XY && eqv_XZ && eqv_YZ;
     }
     Vector3D operator=(Vector3D v) { X = v.X; Y = v.Y; Z = v.Z; return *this; }
@@ -43,7 +43,7 @@ public:
     Vector3D operator-(Vector3D v) { return Vector3D(X-v.X, Y-v.Y, Z-v.Z); }
     Vector3D operator*(Vector3D v) { return Vector3D(det_2(Y, Z, v.Y, v.Z), -det_2(X, Z, v.X, v.Z), det_2(X, Y, v.X, v.Y)); }
     Vector3D operator*(double k) { return Vector3D(X*k, Y*k, Z*k); }
-    bool operator==(Vector3D v) { return (X == v.X) && (Y == v.Y) && (Z == v.Z); }
+    bool operator==(Vector3D v) { return X == v.X && Y == v.Y && Z == v.Z; }
 
     friend ostream & operator<<(ostream &, Vector3D);
     friend int Intersect(Segment3D, Segment3D, Vector3D&);
@@ -182,13 +182,13 @@ int main()
     printResultIntersect(s1, s2);
     cout << endl;*/
 
-    Vector3D p1, p2;
+    /*Vector3D p1, p2;
     p1 = {3, -3, 2}; p2 = p1 + Vector3D(-1, 1, 2);
     s1 = {p1, p2};
     p1 = {-1, 4, -26}; p2 = p1 + Vector3D(3, -4, 6);
     s2 = {p1, p2};
 
-    printResultIntersect(s1, s2);
+    printResultIntersect(s1, s2);*/
     cout << endl;
 
     return 0;
