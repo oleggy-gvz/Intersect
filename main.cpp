@@ -26,15 +26,15 @@ public:
     //Vector3D(const Vector3D &v) : X(v.getX()), Y(v.getY()), Z(v.getZ()) {}
     Vector3D(double _X, double _Y, double _Z) : X(_X), Y(_Y), Z(_Z) {}
 
-    double getX() const { return X; }
-    double getY() const { return Y; }
-    double getZ() const { return Z; }
+    double getX() { return X; }
+    double getY() { return Y; }
+    double getZ() { return Z; }
     bool isNull() { return X == 0 && Y == 0 && Z == 0; }
 
-    Vector3D vector_multiplication(const Vector3D &v)  { Vector3D tmp(det_2(Y, Z, v.Y, v.Z), -det_2(X, Z, v.X, v.Z), det_2(X, Y, v.X, v.Y)); return tmp; }
-    double scalar_multiplication(const Vector3D &v) { return X * v.getX() + Y * v.getY() + Z * v.getZ(); }
-    double mixed_multiplication(const Vector3D &v1, const Vector3D &v2)  { Vector3D v12(v1); return scalar_multiplication(v12.vector_multiplication(v2)); }
-    bool isCollinearity(const Vector3D &v)
+    Vector3D vector_multiplication(Vector3D v)  { Vector3D tmp(det_2(Y, Z, v.Y, v.Z), -det_2(X, Z, v.X, v.Z), det_2(X, Y, v.X, v.Y)); return tmp; }
+    double scalar_multiplication(Vector3D v) { return X * v.getX() + Y * v.getY() + Z * v.getZ(); }
+    double mixed_multiplication(Vector3D v1, Vector3D v2)  { return scalar_multiplication(v1.vector_multiplication(v2)); }
+    bool isCollinearity(Vector3D v)
     {
         bool eqv_XY = (v.getX() == 0 || v.getY() == 0) ? true : (X / v.getX()) == (Y / v.getY());
         bool eqv_XZ = (v.getX() == 0 || v.getZ() == 0) ? true : (X / v.getX()) == (Z / v.getZ());
@@ -42,15 +42,15 @@ public:
         return eqv_XY && eqv_XZ && eqv_YZ;
     }
 
-    Vector3D operator=(const Vector3D &v) { X = v.X; Y = v.Y; Z = v.Z; return *this; }
-    Vector3D operator+(const Vector3D &v) { Vector3D tmp(X+v.X, Y+v.Y, Z+v.Z); return tmp; }
-    Vector3D operator-(const Vector3D &v) { Vector3D tmp(X-v.X, Y-v.Y, Z-v.Z); return tmp; }
-    Vector3D operator*(const Vector3D &v) { return vector_multiplication(v); }
+    Vector3D operator=(Vector3D v) { X = v.X; Y = v.Y; Z = v.Z; return *this; }
+    Vector3D operator+(Vector3D v) { Vector3D tmp(X+v.X, Y+v.Y, Z+v.Z); return tmp; }
+    Vector3D operator-(Vector3D v) { Vector3D tmp(X-v.X, Y-v.Y, Z-v.Z); return tmp; }
+    Vector3D operator*(Vector3D v) { return vector_multiplication(v); }
 
-    friend ostream & operator<<(ostream &, const Vector3D &);
+    friend ostream & operator<<(ostream &, Vector3D);
 };
 
-ostream & operator<<(ostream &out, const Vector3D &v)
+ostream & operator<<(ostream &out, Vector3D v)
 {
     out << "(" << v.X << ", " << v.Y << ", " << v.Z << ")";
     return out;
@@ -67,39 +67,39 @@ private:
 
 public:
     Segment3D() : start({0,0,0}), end({1,1,1}), direction(end - start) {}
-    Segment3D(const Vector3D &_start, const Vector3D &_end) : start(_start), end(_end), direction(end - start)
+    Segment3D(Vector3D _start, Vector3D _end) : start(_start), end(_end), direction(end - start)
     {
         if (direction.isNull()) throw Exception("beginning and end of line must be different points");
     }
 
-    Vector3D getStart() const { return start; }
-    Vector3D getEnd() const { return end; }
-    Vector3D getDirection() const { return direction; }
+    Vector3D getStart() { return start; }
+    Vector3D getEnd() { return end; }
+    Vector3D getDirection() { return direction; }
 
-    bool isCollinearity(const Segment3D &line) // belong to a line of segment
+    bool isCollinearity(Segment3D line) // belong to a line of segment
     {
         Vector3D point1 = line.getStart() - start;
         Vector3D point2 = line.getEnd() - start;
         return point1.isCollinearity(direction) && point2.isCollinearity(direction);
     }
 
-    bool isParallel(const Segment3D &line) { return direction.isCollinearity(line.getDirection()); }
-    bool isCoplanarity(const Segment3D &line) // belong to a common surface
+    bool isParallel(Segment3D line) { return direction.isCollinearity(line.getDirection()); }
+    bool isCoplanarity(Segment3D line) // belong to a common surface
     {
         Vector3D vec = line.getStart() - start;
         return vec.mixed_multiplication(direction, line.direction) == 0;
     }
 
-    friend ostream& operator<<(ostream &, const Segment3D &);
+    friend ostream& operator<<(ostream &, Segment3D);
 };
 
-ostream& operator<<(ostream &out, const Segment3D &s)
+ostream& operator<<(ostream &out, Segment3D s)
 {
     out << s.start << " -> " << s.end;
     return out;
 }
 
-int Intersect(Segment3D &s1, Segment3D &s2, Vector3D *cross)
+int Intersect(Segment3D s1, Segment3D s2, Vector3D *cross)
 {
     if (s1.isCollinearity(s2)) return 1;
     if (s1.isParallel(s2)) return 2;
@@ -113,7 +113,7 @@ int Intersect(Segment3D &s1, Segment3D &s2, Vector3D *cross)
     return 0;
 }
 
-void printResultIntersect(Segment3D &s1, Segment3D &s2)
+void printResultIntersect(Segment3D s1, Segment3D s2)
 {
     Vector3D point;
     cout << "segment 1 = " << s1 << endl;
