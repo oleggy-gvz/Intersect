@@ -13,6 +13,8 @@ public:
     const char* what() const noexcept { return m_error.c_str(); }
 };
 
+class Segment3D;
+
 class Vector3D
 {
 private:
@@ -23,7 +25,6 @@ private:
     double det_2(double a11, double a12, double a21, double a22) { return a11 * a22 - a21 * a12; }
 public:
     Vector3D() : X(0), Y(0), Z(0) {}
-    //Vector3D(const Vector3D &v) : X(v.X), Y(v.Y), Z(v.Z) {}
     Vector3D(double _X, double _Y, double _Z) : X(_X), Y(_Y), Z(_Z) {}
     bool isNull() { return X == 0 && Y == 0 && Z == 0; }
 
@@ -44,6 +45,7 @@ public:
     Vector3D operator*(Vector3D v) { return vector_multiplication(v); }
 
     friend ostream & operator<<(ostream &, Vector3D);
+    friend int Intersect(Segment3D, Segment3D, Vector3D*);
 };
 
 ostream & operator<<(ostream &out, Vector3D v)
@@ -83,6 +85,7 @@ public:
     }
 
     friend ostream& operator<<(ostream &, Segment3D);
+    friend int Intersect(Segment3D, Segment3D, Vector3D*);
 };
 
 ostream& operator<<(ostream &out, Segment3D s)
