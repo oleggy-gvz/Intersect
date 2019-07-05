@@ -28,7 +28,9 @@ public:
     Vector3D() : X(0), Y(0), Z(0) {}
     Vector3D(double _X, double _Y, double _Z) : X(_X), Y(_Y), Z(_Z) {}
     bool isNull() { return X == 0 && Y == 0 && Z == 0; }
-
+    double getX() { return X; }
+    double getY() { return Y; }
+    double getZ() { return Z; }
     double scalar_multi(Vector3D v) { return X * v.X + Y * v.Y + Z * v.Z; }
     double mixed_multi(Vector3D v1, Vector3D v2)  { return scalar_multi(v1 * v2); }
     bool isCollinearity(Vector3D v)
@@ -44,16 +46,10 @@ public:
     Vector3D operator*(Vector3D v) { return Vector3D(det_2(Y, Z, v.Y, v.Z), -det_2(X, Z, v.X, v.Z), det_2(X, Y, v.X, v.Y)); }
     Vector3D operator*(double k) { return Vector3D(X*k, Y*k, Z*k); }
     bool operator==(Vector3D v) { return X == v.X && Y == v.Y && Z == v.Z; }
-
     friend ostream & operator<<(ostream &, Vector3D);
-    friend int Intersect(Segment3D, Segment3D, Vector3D&);
 };
 
-ostream & operator<<(ostream &out, Vector3D v)
-{
-    out << "(" << v.X << ", " << v.Y << ", " << v.Z << ")";
-    return out;
-}
+ostream & operator<<(ostream &out, Vector3D v) { out << "(" << v.X << ", " << v.Y << ", " << v.Z << ")"; return out; }
 
 // -------------------------------------------------------------------
 
@@ -63,61 +59,48 @@ private:
     Vector3D start;
     Vector3D end;
 
-    Vector3D getPoint(double t) { return start + getDirection() * t; }
+    Vector3D getPoint(double ratio) { return start + getDirection() * ratio; } // parametric view
+    double getRatio(Vector3D point) { return (point.getX() - start.getX()) / getDirection().getX(); }
+    bool isInsideSegment(Vector3D point) { double ratio = getRatio(point); return getRatio(start) < ratio && ratio < getRatio(end); }
 public:
     Segment3D() : start(0,0,0), end(1,1,1) {}
     Segment3D(Vector3D _start, Vector3D _end) : start(_start), end(_end)
     {
         if (getDirection().isNull()) throw Exception("beginning and end of line must be different points");
     }
-
     bool isCollinearity(Segment3D line) // belong to a line of segment
     {
         Vector3D point1 = line.start - start;
         Vector3D point2 = line.end - start;
-        return point1.isCollinearity(getDirection()) && point2.isCollinearity(getDirection());
+        Vector3D dir = getDirection();
+        return point1.isCollinearity(dir) && point2.isCollinearity(dir);
     }
     Vector3D getDirection() { return end - start; }
-
     bool isParallel(Segment3D line) { return getDirection().isCollinearity(line.getDirection()); }
     bool isCoplanarity(Segment3D line) // belong to a common surface
     {
         Vector3D vec = line.start - start;
         return vec.mixed_multi(getDirection(), line.getDirection()) == 0;
     }
-
     friend ostream& operator<<(ostream &, Segment3D);
-    friend int Intersect(Segment3D, Segment3D, Vector3D&);
+    friend int Intersect(Segment3D s1, Segment3D s2, Vector3D &cross);
 };
 
-ostream& operator<<(ostream &out, Segment3D s)
-{
-    out << s.start << " -> " << s.end;
-    return out;
-}
+ostream& operator<<(ostream &out, Segment3D s) { out << s.start << " -> " << s.end; return out; }
 
 int Intersect(Segment3D s1, Segment3D s2, Vector3D &cross)
 {
-    if (s1.isCollinearity(s2)) return 1;
-    if (s1.isParallel(s2)) return 2;
-    if (!s1.isCoplanarity(s2)) return 3;
+    if (s1.isCollinearity(s2)) return -1; // lines belong to a common line
+    if (s1.isParallel(s2)) return -2; // lines is parallel
+    if (!s1.isCoplanarity(s2)) return 2; // not belong to a common surface
 
-    // TODO: поиск точки пересечения
-    Vector3D num = s2.start - s1.start;
-    Vector3D denom = s1.getDirection() - s2.getDirection();
+    Vector3D s1_v = s1.getDirection();
+    Vector3D s2_v = s2.getDirection();
+    Vector3D dif = s1.start - s2.start;
+    double ratio = (s1_v.getY() * dif.getX() - s1_v.getX() * dif.getY()) / (s1_v.getY() * s2_v.getX() - s1_v.getX() * s2_v.getY());
+    cross = s2.getPoint(ratio);
 
-    double t_x = num.X / denom.X;
-    double t_y = num.Y / denom.Y;
-    double t_z = num.Z / denom.Z;
-    double t;
-    if (s1.getPoint(t_x) == s2.getPoint(t_x)) t = t_x;
-    else if (s1.getPoint(t_y) == s2.getPoint(t_y)) t = t_y;
-    else if (s1.getPoint(t_z) == s2.getPoint(t_z)) t = t_z;
-    else throw Exception("unknown error in the process of calculating the intersection point");
-
-    cross = s1.getPoint(t);
-    // TODO: точка пересечения лежит за границами сегментов
-    //if () return 4;
+    if (!s1.isInsideSegment(cross) || !s2.isInsideSegment(cross)) return 1;
 
     return 0;
 }
@@ -130,27 +113,27 @@ void printResultIntersect(Segment3D s1, Segment3D s2)
 
     int res = Intersect(s1, s2, point);
 
-    switch(res)
+    if (res == 0) { cout << "point of intersection is " << point << endl; }
+    else
     {
-    case 0:
-        cout << "point of intersection is " << point << endl;
-        break;
+        switch(res)
+        {
+        case 1:
+            cout << "no intersect: point of intersection " << point << " is outside the boundaries of the segments" << endl;
+            break;
 
-    case 1:
-        cout << "no solutions: belong to a common line" << endl;
-        break;
+        case 2:
+            cout << "no intersect: lines is not belong to a common surface" << endl;
+            break;
 
-    case 2:
-        cout << "no solutions: lines is parallel" << endl;
-        break;
+        case -1:
+            cout << "no solutions: lines belong to a common line" << endl;
+            break;
 
-    case 3:
-        cout << "no intersect: lines is not belong to a common surface" << endl;
-        break;
-
-    case 4:
-        cout << "no intersect: point of intersection is outside the boundaries of the segments" << endl;
-        break;
+        case -2:
+            cout << "no solutions: lines is parallel" << endl;
+            break;
+        }
     }
 }
 
@@ -159,8 +142,6 @@ void printResultIntersect(Segment3D s1, Segment3D s2)
 int main()
 {
     Segment3D s1, s2;
-    printResultIntersect(s1, s2);
-    cout << endl;
 
     s1 = {{1, 1, 0}, {2, 2, 0}};
     s2 = {{-3, -3, 0}, {-4, -4, 0}};
@@ -177,18 +158,27 @@ int main()
     printResultIntersect(s1, s2);
     cout << endl;
 
-    /*s1 = {{1, 1, 0}, {2, 2, 0}};
+    s1 = {{1, 1, 0}, {2, 2, 0}};
     s2 = {{1, 2, 0}, {2, 1, 0}};
     printResultIntersect(s1, s2);
-    cout << endl;*/
+    cout << endl;
 
-    /*Vector3D p1, p2;
-    p1 = {3, -3, 2}; p2 = p1 + Vector3D(-1, 1, 2);
-    s1 = {p1, p2};
-    p1 = {-1, 4, -26}; p2 = p1 + Vector3D(3, -4, 6);
-    s2 = {p1, p2};
+    s1 = {{1, 1, 0}, {2, 2, 0}};
+    s2 = {{0, 3, 0}, {1, 2, 0}};
+    printResultIntersect(s1, s2);
+    cout << endl;
 
-    printResultIntersect(s1, s2);*/
+    // examples from the internet
+    // segments are set as starting point and vector
+    Vector3D A, B, vec_a, vec_b;
+    A = {3, -3, 2}; vec_a = {-1, 1, 2}; s1 = {A, A + vec_a};
+    B = {-1, 4, -26}; vec_b = {3, -4, 6}; s2 = {B, B + vec_b};
+    printResultIntersect(s1, s2);
+    cout << endl;
+
+    A = {1, 1, 1}; vec_a = {1, 1, 1}; s1 = {A, A + vec_a};
+    B = {3, 2, 0}; vec_b = {-2, -1, 1}; s2 = {B, B + vec_b};
+    printResultIntersect(s1, s2);
     cout << endl;
 
     return 0;
