@@ -60,7 +60,7 @@ private:
 
     Vector3D getPoint(double ratio) { return start + getDirection() * ratio; } // parametric view
     double getRatio(Vector3D point) { return (point.getX() - start.getX()) / getDirection().getX(); }
-    bool isInsideSegment(Vector3D point) { double ratio = getRatio(point); return getRatio(start) < ratio && ratio < getRatio(end); }
+    bool isInsideSegment(Vector3D point) { double ratio = getRatio(point); return getRatio(start) <= ratio && ratio <= getRatio(end); }
 public:
     Segment3D() : start(0,0,0), end(1,1,1) {}
     Segment3D(Vector3D _start, Vector3D _end) : start(_start), end(_end)
@@ -156,16 +156,10 @@ int main()
     printResultIntersect(s1, s2);
     cout << endl;
 
-    // examples from the internet
     // segments are set as starting point and vector
     Vector3D A, B, vec_a, vec_b;
     A = {3, -3, 2}; vec_a = {-1, 1, 2}; s1 = {A, A + vec_a};
     B = {-1, 4, -26}; vec_b = {3, -4, 6}; s2 = {B, B + vec_b};
-    printResultIntersect(s1, s2);
-    cout << endl;
-
-    A = {1, 1, 1}; vec_a = {1, 1, 1}; s1 = {A, A + vec_a};
-    B = {3, 2, 0}; vec_b = {-2, -1, 1}; s2 = {B, B + vec_b};
     printResultIntersect(s1, s2);
     cout << endl;
 
