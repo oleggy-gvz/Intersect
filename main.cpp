@@ -13,8 +13,6 @@ public:
     const char* what() const noexcept { return m_error.c_str(); }
 };
 
-class Segment3D;
-
 class Vector3D
 {
 private:
