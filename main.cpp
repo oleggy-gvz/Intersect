@@ -118,21 +118,10 @@ void printResultIntersect(Segment3D s1, Segment3D s2)
     {
         switch(res)
         {
-        case 1:
-            cout << "no intersect: point of intersection " << point << " is outside the boundaries of the segments" << endl;
-            break;
-
-        case 2:
-            cout << "no intersect: lines is not belong to a common surface" << endl;
-            break;
-
-        case -1:
-            cout << "no solutions: lines belong to a common line" << endl;
-            break;
-
-        case -2:
-            cout << "no solutions: lines is parallel" << endl;
-            break;
+        case 1: cout << "no intersect: point of intersection " << point << " is outside the boundaries of the segments" << endl; break;
+        case 2: cout << "no intersect: lines is not belong to a common surface" << endl; break;
+        case -1: cout << "no solutions: lines belong to a common line" << endl; break;
+        case -2: cout << "no solutions: lines is parallel" << endl; break;
         }
     }
 }
