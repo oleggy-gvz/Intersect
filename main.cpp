@@ -35,10 +35,9 @@ public:
     double mixed_multi(Vector3D v1, Vector3D v2)  { return scalar_multi(v1 * v2); }
     bool isCollinearity(Vector3D v)
     {
-        bool eqv_XY = (v.X == 0 || v.Y == 0) ? true : X / v.X == Y / v.Y;
-        bool eqv_XZ = (v.X == 0 || v.Z == 0) ? true : X / v.X == Z / v.Z;
-        bool eqv_YZ = (v.Y == 0 || v.Z == 0) ? true : Y / v.Y == Z / v.Z;
-        return eqv_XY && eqv_XZ && eqv_YZ;
+        return ((v.X == 0 || v.Y == 0) ? true : X / v.X == Y / v.Y) &&
+                ((v.X == 0 || v.Z == 0) ? true : X / v.X == Z / v.Z) &&
+                ((v.Y == 0 || v.Z == 0) ? true : Y / v.Y == Z / v.Z);
     }
     Vector3D operator=(Vector3D v) { X = v.X; Y = v.Y; Z = v.Z; return *this; }
     Vector3D operator+(Vector3D v) { return Vector3D(X+v.X, Y+v.Y, Z+v.Z); }
