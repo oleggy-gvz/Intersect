@@ -20,9 +20,8 @@ public:
 bool equal_real(double a, double b)
 {
     double eps = 0.0000001;
-    a = a < 0 ? -a : a;
-    b = b < 0 ? -b : b;
-    return a - b < eps ? true : false;
+    double abs = (a - b) < 0 ? b - a : a - b;
+    return abs < eps ? true : false;
 }
 
 class Vector3D
@@ -31,11 +30,6 @@ private:
     double X;
     double Y;
     double Z;
-
-    /*double det_2(double a11, double a12, double a21, double a22)
-    {
-        return a11 * a22 - a21 * a12;
-    }*/
 
 public:
     Vector3D() : X(0), Y(0), Z(0)
@@ -71,9 +65,21 @@ public:
 
     bool isCollinearity(const Vector3D &v)
     {
-        return equal_real(v.X, 0) || equal_real(v.Y, 0) ? true : equal_real(X / v.X, Y / v.Y) &&
-                equal_real(v.X, 0) || equal_real(v.Z, 0) ? true : equal_real(X / v.X, Z / v.Z) &&
-                equal_real(v.Y, 0) || equal_real(v.Z, 0) ? true : equal_real(Y / v.Y, Z / v.Z);
+        bool is_x = !equal_real(v.X, 0);
+        bool is_y = !equal_real(v.Y, 0);
+        bool is_z = !equal_real(v.Z, 0);
+        bool res;
+
+        if (!is_x && is_y && is_z)
+            res = equal_real(Y / v.Y, Z / v.Z);
+        else if (is_x && !is_y && is_z)
+            res = equal_real(X / v.X, Z / v.Z);
+        else if (is_x && is_y && !is_z)
+            res = equal_real(X / v.X, Y / v.Y);
+        else
+            res = equal_real(X / v.X, Y / v.Y) && equal_real(Y / v.Y, Z / v.Z);
+
+        return res;
     }
 
     Vector3D operator=(const Vector3D &v)
@@ -96,7 +102,6 @@ public:
 
     Vector3D operator*(const Vector3D &v) const
     {
-        //return Vector3D(det_2(Y, Z, v.Y, v.Z), -det_2(X, Z, v.X, v.Z), det_2(X, Y, v.X, v.Y));
         return Vector3D(Y * v.Z - v.Y * Z, -X * v.Z + v.X * Z, X * v.Y - v.X * Y);
     }
 
@@ -137,11 +142,13 @@ private:
     {
         Vector3D res;
 
-        if (!ratio.is_x || !ratio.is_y)
-            res = start + getDirection() * ratio.z;
-        if (!ratio.is_x || !ratio.is_z)
-            res = start + getDirection() * ratio.y;
         if (!ratio.is_y || !ratio.is_z)
+            res = start + getDirection() * ratio.x;
+        else if (!ratio.is_x || !ratio.is_z)
+            res = start + getDirection() * ratio.y;
+        else if (!ratio.is_x || !ratio.is_y)
+            res = start + getDirection() * ratio.z;
+        else // any
             res = start + getDirection() * ratio.x;
 
         return res;
@@ -152,11 +159,13 @@ private:
         Ratio ratio = getRatio(point);
         bool res;
 
-        if (!ratio.is_x || !ratio.is_y)
-            res = getRatio(start).z <= ratio.z && ratio.z <= getRatio(end).z;
-        if (!ratio.is_x || !ratio.is_z)
-            res = getRatio(start).y <= ratio.y && ratio.y <= getRatio(end).y;
         if (!ratio.is_y || !ratio.is_z)
+            res = getRatio(start).x <= ratio.x && ratio.x <= getRatio(end).x;
+        else if (!ratio.is_x || !ratio.is_z)
+            res = getRatio(start).y <= ratio.y && ratio.y <= getRatio(end).y;
+        else if (!ratio.is_x || !ratio.is_y)
+            res = getRatio(start).z <= ratio.z && ratio.z <= getRatio(end).z;
+        else // any
             res = getRatio(start).x <= ratio.x && ratio.x <= getRatio(end).x;
 
         return res;
@@ -167,11 +176,11 @@ private:
         Vector3D dir = getDirection();
         Ratio ratio;
 
-        ratio.is_x = equal_real(dir.getX(), 0);
+        ratio.is_x = !equal_real(dir.getX(), 0);
         ratio.x = ratio.is_x ? (point.getX() - start.getX()) / dir.getX() : 0;
-        ratio.is_y = equal_real(dir.getY(), 0);
+        ratio.is_y = !equal_real(dir.getY(), 0);
         ratio.y = ratio.is_y ? (point.getY() - start.getY()) / dir.getY() : 0;
-        ratio.is_z = equal_real(dir.getZ(), 0);
+        ratio.is_z = !equal_real(dir.getZ(), 0);
         ratio.z = ratio.is_z ? (point.getZ() - start.getZ()) / dir.getZ() : 0;
 
         return ratio;
@@ -195,8 +204,8 @@ private:
 
         Ratio ratio;
         ratio.is_x = isRatioIntersect(s1_v.getX(), s1_v.getY(), s2_v.getX(), s2_v.getY(), dif.getX(), dif.getY(), ratio.x);
-        ratio.is_y = isRatioIntersect(s1_v.getX(), s1_v.getY(), s2_v.getX(), s2_v.getY(), dif.getX(), dif.getY(), ratio.y);
-        ratio.is_z = isRatioIntersect(s1_v.getX(), s1_v.getY(), s2_v.getX(), s2_v.getY(), dif.getX(), dif.getY(), ratio.z);
+        ratio.is_y = isRatioIntersect(s1_v.getX(), s1_v.getZ(), s2_v.getX(), s2_v.getZ(), dif.getX(), dif.getZ(), ratio.y);
+        ratio.is_z = isRatioIntersect(s1_v.getY(), s1_v.getZ(), s2_v.getY(), s2_v.getZ(), dif.getY(), dif.getZ(), ratio.z);
 
         return ratio;
     }
@@ -212,10 +221,13 @@ public:
 
     bool isCollinearity(const Segment3D &line) // belong to a line of segment
     {
-        Vector3D point1 = line.start - start;
-        Vector3D point2 = line.end - start;
+        Vector3D vec1 = line.start - start;
+        Vector3D vec2 = line.end - start;
         Vector3D dir = getDirection();
-        return point1.isCollinearity(dir) && point2.isCollinearity(dir);
+        bool tmp1 = vec1.isCollinearity(dir);
+        bool tmp2 = vec2.isCollinearity(dir);
+        return vec1.isCollinearity(dir) &&
+                vec2.isCollinearity(dir);
     }
 
     Vector3D getDirection() const
@@ -240,10 +252,11 @@ public:
         if (isParallel(line)) return -2; // lines is parallel
         if (!isCoplanarity(line)) return 2; // not belong to a common surface
 
-        Ratio ratio = getRatioIntersect(line);
-        cross = line.getPoint(ratio);
+        Ratio ratio_line = getRatioIntersect(line);
+        cross = line.getPoint(ratio_line);
 
-        if (!isInsideSegment(cross) || !line.isInsideSegment(cross)) return 1;
+        if (!isInsideSegment(cross) || !line.isInsideSegment(cross))
+            return 1;
 
         return 0;
     }
@@ -318,12 +331,17 @@ int main()
     s1 = {{1, 1, 0}, {2, 2, 0}};
     s2 = {{0, 3, 0}, {1, 2, 0}};
     printResultIntersect(s1, s2);
-    cout << endl;*/
+    cout << endl;
 
     // segments are set as starting point and vector
     Vector3D A, B, vec_a, vec_b;
     A = {3, -3, 2}; vec_a = {-1, 1, 2}; s1 = {A, A + vec_a};
     B = {-1, 4, -26}; vec_b = {3, -4, 6}; s2 = {B, B + vec_b};
+    printResultIntersect(s1, s2);
+    cout << endl;*/
+
+    s1 = {{2, 0, 0}, {1, 0, 0}};
+    s2 = {{0, 2, 0}, {0, 1, 0}};
     printResultIntersect(s1, s2);
     cout << endl;
 
