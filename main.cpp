@@ -42,7 +42,6 @@ ostream & operator<<(ostream &out, const Point3D &p) { out << "(" << p.X << ", "
 class Vector3D : public Point3D
 {
 public:
-    Vector3D() : Point3D(1, 1, 1) {}
     Vector3D(double _X, double _Y, double _Z) : Point3D(_X, _Y, _Z)
     {
         if (*this == Point3D(0, 0 ,0)) throw Exception("vector cannot be null");
@@ -130,7 +129,6 @@ private:
     }
 
 public:
-    Segment3D() : start(0,0,0), end(1,1,1), direction(end - start) {}
     Segment3D(const Vector3D &_start, const Vector3D &_end) : start(_start), end(_end), direction(end - start) {}
 
     bool isCollinearity(const Segment3D &line) // belong to a line of segment
@@ -185,10 +183,8 @@ void printResultIntersect(const Segment3D &s1, const Segment3D &s2)
 
 int main()
 {
-    Segment3D s1, s2;
-
-    s1 = {{1, 1, 0}, {2, 2, 0}};
-    s2 = {{-3, -3, 0}, {-4, -4, 0}};
+    Segment3D s1 = {{1, 1, 0}, {2, 2, 0}},
+            s2 = {{-3, -3, 0}, {-4, -4, 0}};
     printResultIntersect(s1, s2);
     cout << endl;
 
@@ -212,9 +208,8 @@ int main()
     printResultIntersect(s1, s2);
     cout << endl;
 
-    Vector3D A, B, vec_a, vec_b;
-    A = {3, -3, 2}; vec_a = {-1, 1, 2}; s1 = {A, A + vec_a};
-    B = {-1, 4, -26}; vec_b = {3, -4, 6}; s2 = {B, B + vec_b};
+    Vector3D A = {3, -3, 2}; Vector3D vec_a = {-1, 1, 2}; s1 = {A, A + vec_a};
+    Vector3D B = {-1, 4, -26}; Vector3D vec_b = {3, -4, 6}; s2 = {B, B + vec_b};
     printResultIntersect(s1, s2);
     cout << endl;
 
