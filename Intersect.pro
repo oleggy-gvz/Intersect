@@ -1,5 +1,5 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
-    Intersect1 \
-	Intersect2
+    Parametric \
+	Gauss

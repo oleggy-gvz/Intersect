@@ -48,7 +48,7 @@ public:
         if (!is_x && is_y && is_z)      res = equal_real(Y / v.Y, Z / v.Z); // axis x is null
         else if (is_x && !is_y && is_z) res = equal_real(X / v.X, Z / v.Z); // axis y is null
         else if (is_x && is_y && !is_z) res = equal_real(X / v.X, Y / v.Y); // axis z is null
-        else /* any other cases */      res = equal_real(X / v.X, Y / v.Y) && equal_real(Y / v.Y, Z / v.Z);
+        else res = equal_real(X / v.X, Y / v.Y) && equal_real(Y / v.Y, Z / v.Z); // any other cases
         return res;
     }
 
@@ -72,7 +72,7 @@ private:
     Vector3D start;
     Vector3D end;
 
-    struct Ratio { double x = 0, y = 0, z = 0; bool isX = true, isY = true, isZ = true; }; // bool - no axis
+    /*struct Ratio { double x = 0, y = 0, z = 0; bool isX = true, isY = true, isZ = true; }; // bool - no axis
 
     Vector3D getVectorFromRario(Ratio ratio) const
     {
@@ -135,7 +135,7 @@ private:
         ratio.isY = ratioIntersect(s1_v.getX(), s1_v.getZ(), s2_v.getX(), s2_v.getZ(), dif.getX(), dif.getZ(), ratio.y);
         ratio.isZ = ratioIntersect(s1_v.getX(), s1_v.getY(), s2_v.getX(), s2_v.getY(), dif.getX(), dif.getY(), ratio.z);
         return ratio;
-    }
+    }*/
 
 public:
     Segment3D(const Vector3D &_start, const Vector3D &_end) : start(_start), end(_end)
@@ -155,27 +155,30 @@ public:
         Vector3D vec = line.start - start;
         return equal_real(vec.mixed_multi(getDirection(), line.getDirection()), 0);
     }
-    int Intersect(const Segment3D &line, Vector3D &cross) const
-    {
-        if (isCollinearity(line)) return -1; // lines belong to a common line
-        if (isParallel(line)) return -2; // lines is parallel
-        if (!isCoplanarity(line)) return 2; // not belong to a common surface
-        Ratio ratio = getRatioIntersect(line);
-        cross = line.getVectorFromRario(ratio);
-        if (!isInsideSegment(cross) || !line.isInsideSegment(cross)) return 1;
-        return 0;
-    }
     friend ostream& operator<<(ostream &, const Segment3D &);
 };
 
 ostream& operator<<(ostream &out, const Segment3D &s) { out << s.start << " -> " << s.end; return out; }
+
+int Intersect(const Segment3D &s1, const Segment3D &s2, Vector3D &cross)
+{
+    if (s1.isCollinearity(s2)) return -1; // lines belong to a common line
+    if (s1.isParallel(s2)) return -2; // lines is parallel
+    if (!s1.isCoplanarity(s2)) return 2; // not belong to a common surface
+
+    /*Ratio ratio = getRatioIntersect(s2);
+    cross = line.getVectorFromRario(ratio);
+    if (!s1.isInsideSegment(cross) || !s2.isInsideSegment(cross)) return 1;*/
+
+    return 0;
+}
 
 void printResultIntersect(const Segment3D &s1, const Segment3D &s2)
 {
     Vector3D point;
     cout << "segment 1 = " << s1 << endl;
     cout << "segment 2 = " << s2 << endl;
-    int res = s1.Intersect(s2, point);
+    int res = Intersect(s1, s2, point);
     if (res == 0) cout << "point of intersection is " << point << endl;
     else
     {
@@ -222,10 +225,6 @@ int main()
     Vector3D B = {-1, 4, -26}; Vector3D vec_b = {3, -4, 6}; s2 = {B, B + vec_b};
     printResultIntersect(s1, s2);
     cout << endl;
-
-    /*double a = 10000000000.1, b = a * 0.5;
-    if (b == 5000000000.05) cout << "equal" << endl;
-    if (equal_real(b, 500000000.05)) cout << "equal_real" << endl;*/
 
     return 0;
 }

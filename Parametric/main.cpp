@@ -115,13 +115,8 @@ private:
 
     bool ratioIntersect(double a1, double a2, double b1, double b2, double dif1, double dif2, double &ratio) const
     {
-        bool res = false;
-        ratio = -1;
-        if (!equal_real(a2 * b1, a1 * b2)) // check divide by zero
-        {
-            res = true;
-            ratio = (a2 * dif1 - a1 * dif2) / (a2 * b1 - a1 * b2);
-        }
+        bool res = false; ratio = -1; // mark empty ratio
+        if (!equal_real(a2 * b1, a1 * b2)) { res = true; ratio = (a2 * dif1 - a1 * dif2) / (a2 * b1 - a1 * b2); } // check divide by zero
         return res;
     }
 
@@ -222,10 +217,6 @@ int main()
     Vector3D B = {-1, 4, -26}; Vector3D vec_b = {3, -4, 6}; s2 = {B, B + vec_b};
     printResultIntersect(s1, s2);
     cout << endl;
-
-    /*double a = 10000000000.1, b = a * 0.5;
-    if (b == 5000000000.05) cout << "equal" << endl;
-    if (equal_real(b, 500000000.05)) cout << "equal_real" << endl;*/
 
     return 0;
 }
