@@ -1,4 +1,5 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
-    Intersect1
+    Intersect1 \
+	Intersect2
