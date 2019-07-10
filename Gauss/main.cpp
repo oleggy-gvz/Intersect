@@ -30,7 +30,7 @@ private:
 public:
     Vector3D() : X(0), Y(0), Z(0) {}
     Vector3D(double _X, double _Y, double _Z) : X(_X), Y(_Y), Z(_Z) {}
-    Vector3D(const Vector3D &p) : X(p.getX()), Y(p.getY()), Z(p.getZ()) {}
+    Vector3D(const Vector3D &v) : X(v.getX()), Y(v.getY()), Z(v.getZ()) {}
 
     double getX() const { return X; }
     double getY() const { return Y; }
@@ -52,17 +52,17 @@ public:
         return res;
     }
 
-    Vector3D operator=(const Vector3D &p) { X = p.X; Y = p.Y; Z = p.Z; return *this; }
-    Vector3D operator+(const Vector3D &p) const { return Vector3D(X+p.X, Y+p.Y, Z+p.Z); }
-    Vector3D operator-(const Vector3D &p) const { return Vector3D(X-p.X, Y-p.Y, Z-p.Z); }
+    Vector3D operator=(const Vector3D &v) { X = v.X; Y = v.Y; Z = v.Z; return *this; }
+    Vector3D operator+(const Vector3D &v) const { return Vector3D(X+v.X, Y+v.Y, Z+v.Z); }
+    Vector3D operator-(const Vector3D &v) const { return Vector3D(X-v.X, Y-v.Y, Z-v.Z); }
     Vector3D operator*(double k) const { return Vector3D(X * k, Y * k, Z * k); }
     Vector3D operator*(const Vector3D &v) const { return Vector3D(Y * v.Z - v.Y * Z, -X * v.Z + v.X * Z, X * v.Y - v.X * Y); }
-    bool operator==(const Vector3D &p) { return equal_real(X, p.X) && equal_real(Y, p.Y) && equal_real(Z, p.Z); }
+    bool operator==(const Vector3D &v) { return equal_real(X, v.X) && equal_real(Y, v.Y) && equal_real(Z, v.Z); }
 
     friend ostream & operator<<(ostream &, const Vector3D &);
 };
 
-ostream & operator<<(ostream &out, const Vector3D &p) { out << "(" << p.X << ", " << p.Y << ", " << p.Z << ")"; return out; }
+ostream & operator<<(ostream &out, const Vector3D &v) { out << "(" << v.X << ", " << v.Y << ", " << v.Z << ")"; return out; }
 
 // -------------------------------------------------------------------
 
@@ -142,13 +142,13 @@ public:
     {
         if (getDirection() == Vector3D(0, 0 ,0)) throw Exception("start and end points of the segment must be different");
     }
-    bool isCollinearity(const Segment3D &line) const // belong to a line of segment
+    bool isCollinearity(const Segment3D &s) const // belong to a line of segment
     {
-        Vector3D vec1 = line.start - start;
-        Vector3D vec2 = line.end - start;
+        Vector3D vec1 = s.start - start;
+        Vector3D vec2 = s.end - start;
         return vec1.isCollinearity(getDirection()) && vec2.isCollinearity(getDirection());
     }
-    bool isParallel(const Segment3D &line) const { return getDirection().isCollinearity(line.getDirection()); }
+    bool isParallel(const Segment3D &s) const { return getDirection().isCollinearity(s.getDirection()); }
     Vector3D getDirection() const { return end - start; }
     bool isCoplanarity(const Segment3D &line) const // belong to a common surface
     {
