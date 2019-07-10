@@ -13,7 +13,12 @@ public:
     const char* what() const noexcept { return m_error.c_str(); }
 };
 
-bool equal_real(double a, double b) { double eps = 0.0000001; return (a < b ? b - a : a - b) < eps ? true : false; }
+bool equal_real(double a, double b)
+{
+    double eps = 0.000001;
+    double abs = a < b ? b - a : a - b;
+    return abs < eps ? true : false;
+}
 
 class Point3D
 {
@@ -130,14 +135,12 @@ private:
 
 public:
     Segment3D(const Vector3D &_start, const Vector3D &_end) : start(_start), end(_end), direction(end - start) {}
-
     bool isCollinearity(const Segment3D &line) // belong to a line of segment
     {
         Vector3D vec1 = line.start - start;
         Vector3D vec2 = line.end - start;
         return vec1.isCollinearity(direction) && vec2.isCollinearity(direction);
     }
-
     bool isParallel(const Segment3D &line) { return direction.isCollinearity(line.direction); }
     bool isCoplanarity(const Segment3D &line) // belong to a common surface
     {
