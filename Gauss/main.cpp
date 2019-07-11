@@ -168,26 +168,26 @@ ostream& operator<<(ostream &out, const Segment3D &s) { out << s.start << " -> "
 
 class Matrix3D
 {
-private:
-    Vector3D vector[3]; // 3*3 matrix is represented as 3 rows of Vector3D
-    const int size = 3;
+protected:
+    Vector3D row[3]; // 3*3 matrix is represented as 3 rows of Vector3D
+
 public:
-    Matrix3D(const Matrix3D &m) { for (int i = 0; i < size; i++) vector[i] = m.vector[i]; }
-    Matrix3D(const Vector3D &v1, const Vector3D &v2, const Vector3D &v3) { vector[0] = v1; vector[1] = v2; vector[2] = v3; }
-    Vector3D getVector(int row) const { return vector[row]; }
-    double getParam(int i, int j) const { return vector[i].getParam(j); }
-    double det() { return vector[0].mixed_multi(vector[1], vector[2]); }
-    Matrix3D operator=(const Matrix3D &m) { for (int i = 0; i < size; i++) vector[i] = m.vector[i]; return *this; }
-    Vector3D operator*(const Vector3D &v) const { return Vector3D(vector[0].scalar_multi(v), vector[1].scalar_multi(v), vector[2].scalar_multi(v)); }
+    Matrix3D(const Matrix3D &m) { for (int i = 0; i < 3; i++) row[i] = m.row[i]; }
+    Matrix3D(const Vector3D &v1, const Vector3D &v2, const Vector3D &v3) { row[0] = v1; row[1] = v2; row[2] = v3; }
+    Vector3D getVector(int _row) const { return row[_row]; }
+    virtual double getParam(int i, int j) const { return row[i].getParam(j); }
+    double det() { return row[0].mixed_multi(row[1], row[2]); }
+    Matrix3D operator=(const Matrix3D &m) { for (int i = 0; i < 3; i++) row[i] = m.row[i]; return *this; }
+    Vector3D operator*(const Vector3D &v) const { return Vector3D(row[0].scalar_multi(v), row[1].scalar_multi(v), row[2].scalar_multi(v)); }
     friend ostream& operator<<(ostream &, const Matrix3D &);
 };
 
 ostream& operator<<(ostream &out, const Matrix3D &m)
 {
-    for (int i = 0; i < m.size; i++)
+    for (int i = 0; i < 3; i++)
     {
         out << "|";
-        for (int j = 0; j < m.size; j++)
+        for (int j = 0; j < 3; j++)
         {
             out.width(3);
             out << m.getParam(i, j) << (j == 2 ? "" : " ");
@@ -196,6 +196,24 @@ ostream& operator<<(ostream &out, const Matrix3D &m)
     }
     return out;
 }
+
+class ExtendedMatrix3D : public Matrix3D
+{
+private:
+    Vector3D row_add;
+    double colum_add[4];
+
+public:
+    ExtendedMatrix3D(const Vector3D &v1, const Vector3D &v2, const Vector3D &v3, const Vector3D &v4,
+                     double b1, double b2, double b3, double b4) : Matrix3D(v1, v2, v3)
+    {
+        row_add = v4;
+        colum_add[0] = b1;
+        colum_add[1] = b2;
+        colum_add[2] = b3;
+        colum_add[3] = b4;
+    }
+};
 
 class LinearEquations3D // solving a system of linear equations A*x=b
 {
@@ -246,8 +264,7 @@ void printResultIntersect(const Segment3D &s1, const Segment3D &s2)
 
 int main()
 {
-    /*Segment3D s1 = {{1, 1, 0}, {2, 2, 0}},
-            s2 = {{-3, -3, 0}, {-4, -4, 0}};
+    /*Segment3D s1 = {{1, 1, 0}, {2, 2, 0}}, s2 = {{-3, -3, 0}, {-4, -4, 0}};
     printResultIntersect(s1, s2);
     cout << endl;
 
@@ -277,8 +294,8 @@ int main()
     cout << endl;*/
 
     Matrix3D M = {{6, 1, 2},
-         {4, -6, 16},
-         {3, 8, 1}};
+                  {4, -6, 16},
+                  {3, 8, 1}};
     Vector3D b = {21, 2, 2};
     Vector3D x_check = {62/15.0, -17/15.0, -4/3.0};
 
