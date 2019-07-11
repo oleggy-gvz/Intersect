@@ -74,7 +74,7 @@ private:
 
     struct Ratio { double x = 0, y = 0, z = 0; bool isX = true, isY = true, isZ = true; }; // bool - no axis
 
-    Vector3D getVectorFromRario(Ratio ratio) const
+    Vector3D getPointFromRario(Ratio ratio) const
     {
         Vector3D res;
         Vector3D dir = getDirection();
@@ -155,8 +155,8 @@ public:
         if (isCollinearity(s)) return -1; // lines belong to a common line
         if (isParallel(s)) return -2; // lines is parallel
         if (!isCoplanarity(s)) return 2; // not belong to a common surface
-        Ratio ratio = getRatioIntersect(s);
-        cross = s.getVectorFromRario(ratio);
+        Ratio ratio_s = getRatioIntersect(s);
+        cross = s.getPointFromRario(ratio_s);
         if (!isInsideSegment(cross) || !s.isInsideSegment(cross)) return 1;
         return 0;
     }

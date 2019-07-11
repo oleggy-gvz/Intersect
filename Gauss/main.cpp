@@ -31,15 +31,22 @@ public:
     Vector3D() : X(0), Y(0), Z(0) {}
     Vector3D(double _X, double _Y, double _Z) : X(_X), Y(_Y), Z(_Z) {}
     Vector3D(const Vector3D &v) : X(v.getX()), Y(v.getY()), Z(v.getZ()) {}
-
     double getX() const { return X; }
     double getY() const { return Y; }
     double getZ() const { return Z; }
-
-    double scalar_multi(const Vector3D &v) { return X * v.X + Y * v.Y + Z * v.Z; }
-    double mixed_multi(const Vector3D &v1, const Vector3D &v2) { return scalar_multi(v1 * v2); }
-
-    bool isCollinearity(const Vector3D &v)
+    double getParam(int i) const
+    {
+        switch(i)
+        {
+        case 0: return X;
+        case 1: return Y;
+        case 2: return Z;
+        default: throw Exception("out of range Vector3D");
+        }
+    }
+    double scalar_multi(const Vector3D &v) const { return X * v.X + Y * v.Y + Z * v.Z; }
+    double mixed_multi(const Vector3D &v1, const Vector3D &v2) const { return scalar_multi(v1 * v2); }
+    bool isCollinearity(const Vector3D &v) const
     {
         bool is_x = !equal_real(v.X, 0);
         bool is_y = !equal_real(v.Y, 0);
@@ -51,14 +58,13 @@ public:
         else res = equal_real(X / v.X, Y / v.Y) && equal_real(Y / v.Y, Z / v.Z); // any other cases
         return res;
     }
-
     Vector3D operator=(const Vector3D &v) { X = v.X; Y = v.Y; Z = v.Z; return *this; }
     Vector3D operator+(const Vector3D &v) const { return Vector3D(X+v.X, Y+v.Y, Z+v.Z); }
     Vector3D operator-(const Vector3D &v) const { return Vector3D(X-v.X, Y-v.Y, Z-v.Z); }
     Vector3D operator*(double k) const { return Vector3D(X * k, Y * k, Z * k); }
+    Vector3D operator/(double k) const { return Vector3D(X / k, Y / k, Z / k); }
     Vector3D operator*(const Vector3D &v) const { return Vector3D(Y * v.Z - v.Y * Z, -X * v.Z + v.X * Z, X * v.Y - v.X * Y); }
     bool operator==(const Vector3D &v) { return equal_real(X, v.X) && equal_real(Y, v.Y) && equal_real(Z, v.Z); }
-
     friend ostream & operator<<(ostream &, const Vector3D &);
 };
 
@@ -136,7 +142,6 @@ private:
         ratio.isZ = ratioIntersect(s1_v.getX(), s1_v.getY(), s2_v.getX(), s2_v.getY(), dif.getX(), dif.getY(), ratio.z);
         return ratio;
     }*/
-
 public:
     Segment3D(const Vector3D &_start, const Vector3D &_end) : start(_start), end(_end)
     {
@@ -146,11 +151,12 @@ public:
     {
         Vector3D vec1 = s.start - start;
         Vector3D vec2 = s.end - start;
-        return vec1.isCollinearity(getDirection()) && vec2.isCollinearity(getDirection());
+        Vector3D dir = getDirection();
+        return vec1.isCollinearity(dir) && vec2.isCollinearity(dir);
     }
     bool isParallel(const Segment3D &s) const { return getDirection().isCollinearity(s.getDirection()); }
     Vector3D getDirection() const { return end - start; }
-    bool isCoplanarity(const Segment3D &line) const // belong to a common surface
+    bool isCoplanarity(const Segment3D &line) const // belong to a common 2D surface
     {
         Vector3D vec = line.start - start;
         return equal_real(vec.mixed_multi(getDirection(), line.getDirection()), 0);
@@ -159,6 +165,50 @@ public:
 };
 
 ostream& operator<<(ostream &out, const Segment3D &s) { out << s.start << " -> " << s.end; return out; }
+
+class Matrix3D
+{
+private:
+    Vector3D vector[3]; // 3*3 matrix is represented as 3 rows of Vector3D
+    const int size = 3;
+public:
+    Matrix3D(const Matrix3D &m) { for (int i = 0; i < size; i++) vector[i] = m.vector[i]; }
+    Matrix3D(const Vector3D &v1, const Vector3D &v2, const Vector3D &v3) { vector[0] = v1; vector[1] = v2; vector[2] = v3; }
+    Vector3D getVector(int row) const { return vector[row]; }
+    double getParam(int i, int j) const { return vector[i].getParam(j); }
+    double det() { return vector[0].mixed_multi(vector[1], vector[2]); }
+    Matrix3D operator=(const Matrix3D &m) { for (int i = 0; i < size; i++) vector[i] = m.vector[i]; return *this; }
+    Vector3D operator*(const Vector3D &v) const { return Vector3D(vector[0].scalar_multi(v), vector[1].scalar_multi(v), vector[2].scalar_multi(v)); }
+    friend ostream& operator<<(ostream &, const Matrix3D &);
+};
+
+ostream& operator<<(ostream &out, const Matrix3D &m)
+{
+    for (int i = 0; i < m.size; i++)
+    {
+        out << "|";
+        for (int j = 0; j < m.size; j++)
+        {
+            out.width(3);
+            out << m.getParam(i, j) << (j == 2 ? "" : " ");
+        }
+        out << "|" << (i == 2 ? "" : "\n");
+    }
+    return out;
+}
+
+class LinearEquations3D // solving a system of linear equations A*x=b
+{
+private:
+    Matrix3D A;
+    Vector3D b;
+public:
+    LinearEquations3D(const Matrix3D &_A, const Vector3D &_b) : A(_A), b(_b) {}
+    Vector3D getSolutionOnGauss()
+    {
+
+    }
+};
 
 int Intersect(const Segment3D &s1, const Segment3D &s2, Vector3D &cross)
 {
@@ -196,7 +246,7 @@ void printResultIntersect(const Segment3D &s1, const Segment3D &s2)
 
 int main()
 {
-    Segment3D s1 = {{1, 1, 0}, {2, 2, 0}},
+    /*Segment3D s1 = {{1, 1, 0}, {2, 2, 0}},
             s2 = {{-3, -3, 0}, {-4, -4, 0}};
     printResultIntersect(s1, s2);
     cout << endl;
@@ -224,7 +274,21 @@ int main()
     Vector3D A = {3, -3, 2}; Vector3D vec_a = {-1, 1, 2}; s1 = {A, A + vec_a};
     Vector3D B = {-1, 4, -26}; Vector3D vec_b = {3, -4, 6}; s2 = {B, B + vec_b};
     printResultIntersect(s1, s2);
-    cout << endl;
+    cout << endl;*/
+
+    Matrix3D M = {{6, 1, 2},
+         {4, -6, 16},
+         {3, 8, 1}};
+    Vector3D b = {21, 2, 2};
+    Vector3D x_check = {62/15.0, -17/15.0, -4/3.0};
+
+    cout << "M = " << endl << M << endl;
+    cout << "b = " << b << endl;
+    cout << "x = " << x_check << endl;
+
+    /*LinearEquations3D R(M, b);
+    Vector3D x = R.getSolutionOnGauss();
+    cout << "x (check) = " << x << endl;*/
 
     return 0;
 }
