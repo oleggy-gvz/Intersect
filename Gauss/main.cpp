@@ -9,7 +9,27 @@ class Exception: public exception
 private:
     string m_error;
 public:
+    enum ExceptionType
+    {
+        VECTOR_OUT_RANGE_PARAM,
+        SEGMENT_EQUAL_POINTS,
+        MATRIX_SIZE_3_VECTOR,
+        MATRIX_OUT_RANGE_VECTOR,
+        MATRIX_SIZE_3_MULTI,
+    };
     Exception(string error) : m_error(error) {}
+    Exception(ExceptionType error)
+    {
+        switch(error)
+        {
+            case VECTOR_OUT_RANGE_PARAM: m_error = "Vector3D::getParam (out of range parameter of Vector3D)"; break;
+            case SEGMENT_EQUAL_POINTS: m_error = "Segment3D::Segment3D (start and end points of the segment must be different)"; break;
+            case MATRIX_SIZE_3_VECTOR: m_error = "Matrix::getVector (matrix size is not equal 3)"; break;
+            case MATRIX_OUT_RANGE_VECTOR: m_error = "Matrix::getVector (out of range)"; break;
+            case MATRIX_SIZE_3_MULTI: m_error = "Matrix::operator* (matrix size is not equal 3)"; break;
+            //case __: m_error = "___"; break;
+        }
+    }
     const char* what() const noexcept { return m_error.c_str(); }
 };
 
@@ -38,10 +58,10 @@ public:
     {
         switch(i)
         {
-        case 0: return X;
-        case 1: return Y;
-        case 2: return Z;
-        default: throw Exception("out of range Vector3D");
+            case 0: return X;
+            case 1: return Y;
+            case 2: return Z;
+            default: throw Exception(Exception::VECTOR_OUT_RANGE_PARAM);
         }
     }
     double scalar_multi(const Vector3D &v) const { return X * v.X + Y * v.Y + Z * v.Z; }
@@ -145,7 +165,7 @@ private:
 public:
     Segment3D(const Vector3D &_start, const Vector3D &_end) : start(_start), end(_end)
     {
-        if (getDirection() == Vector3D(0, 0 ,0)) throw Exception("start and end points of the segment must be different");
+        if (getDirection() == Vector3D(0, 0 ,0)) throw Exception(Exception::SEGMENT_EQUAL_POINTS);
     }
     bool isCollinearity(const Segment3D &s) const // belong to a line of segment
     {
@@ -197,31 +217,86 @@ ostream& operator<<(ostream &out, const Matrix3D &m)
     return out;
 }
 
-class ExtendedMatrix3D : public Matrix3D
+class Matrix
 {
 private:
-    Vector3D row_add;
-    double colum_add[4];
+    double matrix[4][4];
+    int size;
+
+    double det_2(int i1, int i2,int j1, int j2) { return matrix[i1][j1] * matrix[i2][j2] - matrix[i2][j1] * matrix[i1][j2]; }
+    double det_3(int i1, int i2, int i3, int j1, int j2, int j3)
+    {
+        return matrix[i1][j1] * det_2(i2, i3, j2, j3) - matrix[i1][j2] * det_2(i2, i3, j1, j3) + matrix[i1][j3] * det_2(i2, i3, j1, j2);
+    }
 
 public:
-    ExtendedMatrix3D(const Vector3D &v1, const Vector3D &v2, const Vector3D &v3, const Vector3D &v4,
-                     double b1, double b2, double b3, double b4) : Matrix3D(v1, v2, v3)
+    Matrix(const Matrix &m) : size(m.size)
     {
-        row_add = v4;
-        colum_add[0] = b1;
-        colum_add[1] = b2;
-        colum_add[2] = b3;
-        colum_add[3] = b4;
+        for (int i = 0; i < size; i++)
+            for (int j = 0; j < size; j++)
+                matrix[i][j] = m.matrix[i][j];
     }
+    Matrix(const Vector3D &v1, const Vector3D &v2, const Vector3D &v3) : size(3)
+    {
+        for (int j = 0; j < size; j++) { matrix[0][j] = v1.getParam(j); matrix[1][j] = v2.getParam(j); matrix[2][j] = v3.getParam(j); }
+    }
+    Matrix(double *m, int s) : size(s)
+    {
+        for (int i = 0; i < size; i++)
+            for (int j = 0; j < size; j++) matrix[i][j] = m[i * size + j];
+    }
+    Vector3D getVector(int row) const
+    {
+        if (size != 3) throw Exception(Exception::MATRIX_SIZE_3_VECTOR);
+        if (row > 2) throw Exception(Exception::MATRIX_OUT_RANGE_VECTOR);
+        return Vector3D(matrix[row][0], matrix[row][1], matrix[row][2]);
+    }
+    double det()
+    {
+        if (size == 3) return det_3(0, 1, 2, 0, 1, 2);
+        else
+        {
+            return matrix[0][0] * det_3(1, 2, 3, 1, 2, 3) - matrix[0][1] * det_3(1, 2, 3, 0, 2, 3) +
+                    matrix[0][2] * det_3(1, 2, 3, 0, 1, 3) - matrix[0][3] * det_3(1, 2, 3, 0, 1, 2);
+        }
+    }
+    Matrix operator=(const Matrix &m)
+    {
+        size = m.size;
+        for (int i = 0; i < size; i++)
+            for (int j = 0; j < size; j++)
+                matrix[i][j] = m.matrix[i][j];
+        return *this;
+    }
+    Vector3D operator*(const Vector3D &v) const
+    {
+        if (size != 3) throw Exception(Exception::MATRIX_SIZE_3_MULTI);
+        return Vector3D(getVector(0).scalar_multi(v), getVector(1).scalar_multi(v), getVector(2).scalar_multi(v));
+    }
+    friend ostream& operator<<(ostream &, const Matrix &);
 };
+
+ostream& operator<<(ostream &out, const Matrix &m)
+{
+    for (int i = 0; i < m.size; i++)
+    {
+        out << "|";
+        for (int j = 0; j < m.size; j++)
+        {
+            out.width(3);
+            out << m.matrix[i][j] << (j == m.size-1 ? "" : " ");
+        }
+        out << "|" << (i == m.size-1 ? "" : "\n");
+    }
+    return out;
+}
 
 class LinearEquations3D // solving a system of linear equations A*x=b
 {
 private:
-    Matrix3D A;
-    Vector3D b;
+    Matrix A;
 public:
-    LinearEquations3D(const Matrix3D &_A, const Vector3D &_b) : A(_A), b(_b) {}
+    LinearEquations3D(const Matrix &a) : A(a) {}
     Vector3D getSolutionOnGauss()
     {
 
@@ -293,15 +368,19 @@ int main()
     printResultIntersect(s1, s2);
     cout << endl;*/
 
-    Matrix3D M = {{6, 1, 2},
-                  {4, -6, 16},
-                  {3, 8, 1}};
+    double m[] = {6, 1, 2,
+                  4, -6, 16,
+                  3, 8, 1};
+    Matrix M(m, 3);
     Vector3D b = {21, 2, 2};
     Vector3D x_check = {62/15.0, -17/15.0, -4/3.0};
 
     cout << "M = " << endl << M << endl;
     cout << "b = " << b << endl;
     cout << "x = " << x_check << endl;
+
+    Vector3D b_check = M * x_check;
+    cout << "b (check) = " << b_check << endl;
 
     /*LinearEquations3D R(M, b);
     Vector3D x = R.getSolutionOnGauss();
