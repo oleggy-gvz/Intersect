@@ -9,22 +9,21 @@ class Exception: public exception
 private:
     string m_error;
 public:
-    enum ExceptionType { VECTOR_OUT_RANGE_PARAM, SEGMENT_EQUAL_POINTS, MATRIX_SIZE_3_VECTOR, MATRIX3D_OUT_RANGE_VECTOR, MATRIX3D_SIZE_3_DET, MATRIX_OUT_RANGE_VECTOR,
-                         MATRIX_SIZE_DET, MATRIX_SIZE_3_MULTI, NUM_EQUATIONS_NOT_EQUAL_RESULT };
+    enum ExceptionType { VECTOR3D_OUT_RANGE, SEGMENT_EQUAL_POINTS, MATRIX3D_OUT_RANGE, MATRIX3D_SIZE_FOR_DET,
+                         MATRIX_OUT_RANGE, MATRIX_SIZE_FOR_DET, MATRIX_SIZE_FOR_MULTI, EQUATIONS_NOT_RESULT };
     Exception(string error) : m_error(error) {}
     Exception(ExceptionType error)
     {
         switch(error)
         {
-        case VECTOR_OUT_RANGE_PARAM: m_error = "Vector3D::getParam (out of range parameter of Vector3D)"; break;
-        case SEGMENT_EQUAL_POINTS: m_error = "Segment3D::Segment3D (start and end points of the segment must be different)"; break;
-        case MATRIX3D_OUT_RANGE_VECTOR: m_error = "Matrix3D::getVector (out of range)"; break;
-        case MATRIX3D_SIZE_3_DET: m_error = "Matrix3D::det (matrix size is not equal 3)"; break;
-        case MATRIX_OUT_RANGE_VECTOR: m_error = "Matrix::getVector (out of range)"; break;
-        case MATRIX_SIZE_DET: m_error = "Matrix::det (matrix size is not equal 3 or 4)"; break;
-        case MATRIX_SIZE_3_VECTOR: m_error = "Matrix::getVector (matrix size is not equal 3)"; break;
-        case MATRIX_SIZE_3_MULTI: m_error = "Matrix::operator* (matrix size is not equal 3)"; break;
-        case NUM_EQUATIONS_NOT_EQUAL_RESULT: m_error = "LinearEquations::LinearEquations (number of equations is not equal to number of results)"; break;
+        case VECTOR3D_OUT_RANGE:    m_error = "Vector3D (out of range parameter of Vector3D)"; break;
+        case SEGMENT_EQUAL_POINTS:  m_error = "Segment3D (start and end points of the segment must be different)"; break;
+        case MATRIX3D_OUT_RANGE:    m_error = "Matrix3D (out of range)"; break;
+        case MATRIX3D_SIZE_FOR_DET: m_error = "Matrix3D determinant (matrix size is not equal 3)"; break;
+        case MATRIX_OUT_RANGE:      m_error = "Matrix (out of range)"; break;
+        case MATRIX_SIZE_FOR_DET:   m_error = "Matrix (matrix size is not equal 3 or 4)"; break;
+        case MATRIX_SIZE_FOR_MULTI: m_error = "Matrix multiply Vector3D (matrix size is not equal 3)"; break;
+        case EQUATIONS_NOT_RESULT:  m_error = "LinearEquations (number of equations is not equal to number of results)"; break;
         }
     }
     const char* what() const noexcept { return m_error.c_str(); }
@@ -58,7 +57,7 @@ public:
             case 0: return X;
             case 1: return Y;
             case 2: return Z;
-            default: throw Exception(Exception::VECTOR_OUT_RANGE_PARAM);
+            default: throw Exception(Exception::VECTOR3D_OUT_RANGE);
         }
     }
     double scalar_multi(const Vector3D &v) const { return X * v.X + Y * v.Y + Z * v.Z; }
@@ -187,26 +186,30 @@ class Matrix3D
 {
 protected:
     Vector3D vectors[4]; // 3*4 matrix is represented as 4 rows of Vector3D
-    int row;
-    int col;
+    unsigned int row;
+    unsigned int col;
 
 public:
-    Matrix3D(const Matrix3D &m) : row(m.row), col(m.col) { for (int i = 0; i < 3; i++) vectors[i] = m.vectors[i]; }
+    Matrix3D(const Matrix3D &m) : row(m.row), col(m.col) { for (unsigned int i = 0; i < 3; i++) vectors[i] = m.vectors[i]; }
     Matrix3D(const Vector3D &v1, const Vector3D &v2, const Vector3D &v3) { setMatrix3D(v1, v2, v3); }
     Matrix3D(const Vector3D &v1, const Vector3D &v2, const Vector3D &v3, const Vector3D &v4) { setMatrix3D(v1, v2, v3, v4); }
     void setMatrix3D(const Vector3D &v1, const Vector3D &v2, const Vector3D &v3) { row = 3; col = 3; vectors[0] = v1; vectors[1] = v2; vectors[2] = v3; }
     void setMatrix3D(const Vector3D &v1, const Vector3D &v2, const Vector3D &v3, const Vector3D &v4){ row = 4; col = 3; vectors[0] = v1; vectors[1] = v2; vectors[2] = v3; vectors[3] = v4; }
-    int getRow() const { return row; }
-    int getColum() const { return col; }
-    Vector3D getVector(int _row) const
+    unsigned int getRow() const { return row; }
+    unsigned int getColum() const { return col; }
+    Vector3D getVector(unsigned int _row) const
     {
-        if (_row > row-1) throw Exception(Exception::MATRIX3D_OUT_RANGE_VECTOR);
+        if (_row > row-1) throw Exception(Exception::MATRIX3D_OUT_RANGE);
         return vectors[_row];
     }
-    virtual double getIndex(int i, int j) const { return vectors[i].getParam(j); }
+    virtual double getIndex(unsigned int i, unsigned int j) const
+    {
+        if (i >= row || j >= col) throw Exception(Exception::MATRIX3D_OUT_RANGE);
+        return vectors[i].getParam(j);
+    }
     double det()
     {
-        if (row != 3 || col != 3) throw Exception(Exception::MATRIX3D_SIZE_3_DET);
+        if (row != 3 || col != 3) throw Exception(Exception::MATRIX3D_SIZE_FOR_DET);
         return vectors[0].mixed_multi(vectors[1], vectors[2]);
     }
     Matrix3D operator=(const Matrix3D &m) { for (int i = 0; i < 3; i++) vectors[i] = m.vectors[i]; return *this; }
@@ -266,20 +269,20 @@ public:
     int getColum() const { return col; }
     Vector3D getVector(int row) const
     {
-        if (row > 3) throw Exception(Exception::MATRIX_OUT_RANGE_VECTOR);
+        if (row > 3) throw Exception(Exception::MATRIX_OUT_RANGE);
         return Vector3D(matrix[row][0], matrix[row][1], matrix[row][2]);
     }
     double det()
     {
         if (row == 3 && col == 3) return det_3(0, 1, 2, 0, 1, 2);
-        else if (row == 2 && col == 2)
+        else if (row == 4 && col == 4)
         {
             return matrix[0][0] * det_3(1, 2, 3, 1, 2, 3) - matrix[0][1] * det_3(1, 2, 3, 0, 2, 3) +
                     matrix[0][2] * det_3(1, 2, 3, 0, 1, 3) - matrix[0][3] * det_3(1, 2, 3, 0, 1, 2);
         }
         else
         {
-            throw Exception(Exception::MATRIX_SIZE_DET);
+            throw Exception(Exception::MATRIX_SIZE_FOR_DET);
         }
     }
     Matrix operator=(const Matrix &m)
@@ -291,7 +294,7 @@ public:
     }
     Vector3D operator*(const Vector3D &v) const
     {
-        if (row != 3 || col != 3) throw Exception(Exception::MATRIX_SIZE_3_MULTI);
+        if (row != 3 || col != 3) throw Exception(Exception::MATRIX_SIZE_FOR_MULTI);
         return Vector3D(getVector(0).scalar_multi(v), getVector(1).scalar_multi(v), getVector(2).scalar_multi(v));
     }
     friend ostream& operator<<(ostream &, const Matrix &);
@@ -318,11 +321,11 @@ private:
     Matrix3D ratios;
     double result[4];
 
-    int findNumRowNotNull(int col)
+    bool isFindRowNotNull(int col, int &row)
     {
-        int res = -1;
-        for (int row = 0; row < ratios.getRow(); row++)
-            if (!equal_real(ratios.getIndex(row, col), 0)) res = row;
+        int res = false; row = -1;
+        for (int n = 0; n < ratios.getRow(); n++)
+            if (!equal_real(ratios.getIndex(n, col), 0)) { res = true; row = n; }
         return res;
     }
 public:
@@ -332,13 +335,14 @@ public:
     }
     LinearEquations(const Matrix3D &_ratios, Vector3D &_result) : ratios(_ratios)
     {
-        if (ratios.getRow() != 3) throw Exception(Exception::NUM_EQUATIONS_NOT_EQUAL_RESULT);
+        if (ratios.getRow() != 3) throw Exception(Exception::EQUATIONS_NOT_RESULT);
         for (int row = 0; row < ratios.getRow(); row++) result[row] = _result.getParam(row);
     }
     Vector3D getSolutionOnGauss()
     {
-        int n = findNumRowNotNull(0);
-        cout << n << endl;
+        int row;
+        if(!isFindRowNotNull(0, row)) cout << "no" << endl;
+        cout << row << endl;
 
         return Vector3D(0, 0, 0);
     }
@@ -409,9 +413,15 @@ int main()
     printResultIntersect(s1, s2);
     cout << endl;*/
 
-    Matrix3D M({0, 1, 2},
+
+    Matrix3D M({6, 1, 2},
+               {4, -6, 16},
+               {3, 8, 1});
+
+    Matrix3D M1({0, 1, 2},
                {0, -6, 16},
-               {0, 8, 1});
+               {1, 8, 1});
+
     Vector3D b = {21, 2, 2};
     Vector3D x_check = {62/15.0, -17/15.0, -4/3.0};
 
@@ -422,6 +432,7 @@ int main()
     Vector3D b_check = M * x_check;
     cout << "b (check) = " << b_check << endl;*/
 
+    M = M1;
     LinearEquations R(M, b);
     Vector3D x = R.getSolutionOnGauss();
     //cout << "x (check) = " << x << endl;
