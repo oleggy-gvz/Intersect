@@ -50,13 +50,23 @@ public:
     double getX() const { return X; }
     double getY() const { return Y; }
     double getZ() const { return Z; }
-    double getParam(int i) const
+    double getParam(unsigned int index) const
     {
-        switch(i)
+        switch(index)
         {
             case 0: return X;
             case 1: return Y;
             case 2: return Z;
+            default: throw Exception(Exception::VECTOR3D_OUT_RANGE);
+        }
+    }
+    void setParam(unsigned int index, double val)
+    {
+        switch(index)
+        {
+            case 0: X = val;
+            case 1: Y = val;
+            case 2: Z = val;
             default: throw Exception(Exception::VECTOR3D_OUT_RANGE);
         }
     }
@@ -80,6 +90,7 @@ public:
     Vector3D operator*(double k) const { return Vector3D(X * k, Y * k, Z * k); }
     Vector3D operator/(double k) const { return Vector3D(X / k, Y / k, Z / k); }
     Vector3D operator*(const Vector3D &v) const { return Vector3D(Y * v.Z - v.Y * Z, -X * v.Z + v.X * Z, X * v.Y - v.X * Y); }
+    Vector3D operator+=(const Vector3D &v) { Vector3D tmp(*this); X += v.X; Y += v.Y; Z += v.Z; return tmp; }
     bool operator==(const Vector3D &v) { return equal_real(X, v.X) && equal_real(Y, v.Y) && equal_real(Z, v.Z); }
     friend ostream & operator<<(ostream &, const Vector3D &);
 };
@@ -195,14 +206,19 @@ public:
     Matrix3D(const Vector3D &v1, const Vector3D &v2, const Vector3D &v3, const Vector3D &v4) { setMatrix3D(v1, v2, v3, v4); }
     void setMatrix3D(const Vector3D &v1, const Vector3D &v2, const Vector3D &v3) { row = 3; col = 3; vectors[0] = v1; vectors[1] = v2; vectors[2] = v3; }
     void setMatrix3D(const Vector3D &v1, const Vector3D &v2, const Vector3D &v3, const Vector3D &v4){ row = 4; col = 3; vectors[0] = v1; vectors[1] = v2; vectors[2] = v3; vectors[3] = v4; }
-    unsigned int getRow() const { return row; }
-    unsigned int getColum() const { return col; }
-    Vector3D getVector(unsigned int _row) const
+    unsigned int getRows() const { return row; }
+    unsigned int getColums() const { return col; }
+    void setRow(unsigned int _row, const Vector3D &v)
     {
-        if (_row > row-1) throw Exception(Exception::MATRIX3D_OUT_RANGE);
+        if (_row >= row) throw Exception(Exception::MATRIX3D_OUT_RANGE);
+        vectors[_row] = v;
+    }
+    Vector3D getRow(unsigned int _row) const
+    {
+        if (_row >= row) throw Exception(Exception::MATRIX3D_OUT_RANGE);
         return vectors[_row];
     }
-    virtual double getIndex(unsigned int i, unsigned int j) const
+    double getIndex(unsigned int i, unsigned int j) const
     {
         if (i >= row || j >= col) throw Exception(Exception::MATRIX3D_OUT_RANGE);
         return vectors[i].getParam(j);
@@ -219,10 +235,10 @@ public:
 
 ostream& operator<<(ostream &out, const Matrix3D &m)
 {
-    for (int i = 0; i < 3; i++)
+    for (unsigned int i = 0; i < 3; i++)
     {
         out << "|";
-        for (int j = 0; j < 3; j++)
+        for (unsigned int j = 0; j < 3; j++)
         {
             out.width(3);
             out << m.getIndex(i, j) << (j == 2 ? "" : " ");
@@ -236,8 +252,8 @@ class Matrix
 {
 private:
     double matrix[4][4];
-    int row;
-    int col;
+    unsigned int row;
+    unsigned int col;
 
     double det_2(int i1, int i2,int j1, int j2) { return matrix[i1][j1] * matrix[i2][j2] - matrix[i2][j1] * matrix[i1][j2]; }
     double det_3(int i1, int i2, int i3, int j1, int j2, int j3)
@@ -248,25 +264,25 @@ private:
 public:
     Matrix(const Matrix &m) : row(m.row), col(m.col)
     {
-        for (int i = 0; i < row; i++)
-            for (int j = 0; j < col; j++) matrix[i][j] = m.matrix[i][j];
+        for (unsigned int i = 0; i < row; i++)
+            for (unsigned int j = 0; j < col; j++) matrix[i][j] = m.matrix[i][j];
     }
     Matrix(const Vector3D &v1, const Vector3D &v2, const Vector3D &v3) { setMatrix(v1, v2, v3); }
     Matrix(const Vector3D v[4], double b[4]) { setMatrix(v, b); }
     void setMatrix(const Vector3D &v1, const Vector3D &v2, const Vector3D &v3)
     {
         row = 3; col = 3;
-        for (int j = 0; j < col; j++) { matrix[0][j] = v1.getParam(j); matrix[1][j] = v2.getParam(j); matrix[2][j] = v3.getParam(j); }
+        for (unsigned int j = 0; j < col; j++) { matrix[0][j] = v1.getParam(j); matrix[1][j] = v2.getParam(j); matrix[2][j] = v3.getParam(j); }
     }
     void setMatrix(const Vector3D v[4], double b[4])
     {
         row = 4; col = 4;
-        for (int i = 0; i < row; i++)
-            for (int j = 0; j < col; j++) matrix[i][j] = v[i].getParam(j);
-        for (int i = 0; i < row; i++) matrix[i][row-1] = b[4];
+        for (unsigned int i = 0; i < row; i++)
+            for (unsigned int j = 0; j < col; j++) matrix[i][j] = v[i].getParam(j);
+        for (unsigned int i = 0; i < row; i++) matrix[i][row-1] = b[4];
     }
-    int getRow() const { return row; }
-    int getColum() const { return col; }
+    unsigned int getRow() const { return row; }
+    unsigned int getColum() const { return col; }
     Vector3D getVector(int row) const
     {
         if (row > 3) throw Exception(Exception::MATRIX_OUT_RANGE);
@@ -288,8 +304,8 @@ public:
     Matrix operator=(const Matrix &m)
     {
         row = m.row; col = m.col;
-        for (int i = 0; i < row; i++)
-            for (int j = 0; j < col; j++) matrix[i][j] = m.matrix[i][j];
+        for (unsigned int i = 0; i < row; i++)
+            for (unsigned int j = 0; j < col; j++) matrix[i][j] = m.matrix[i][j];
         return *this;
     }
     Vector3D operator*(const Vector3D &v) const
@@ -302,10 +318,10 @@ public:
 
 ostream& operator<<(ostream &out, const Matrix &m)
 {
-    for (int i = 0; i < m.row; i++)
+    for (unsigned int i = 0; i < m.row; i++)
     {
         out << "|";
-        for (int j = 0; j < m.col; j++)
+        for (unsigned int j = 0; j < m.col; j++)
         {
             out.width(3);
             out << m.matrix[i][j] << (j == m.col-1 ? "" : " ");
@@ -315,48 +331,109 @@ ostream& operator<<(ostream &out, const Matrix &m)
     return out;
 }
 
-class LinearEquations // solving a system of linear equations: ratios * x = result
+class LinearEquations3D // solving a system of linear equations: ratios * x = result
 {
 private:
     Matrix3D ratios;
-    double result[4];
+    Vector3D solution;
+    double result[4] = {0};
 
-    bool isFindRowNotNull(int col, int &row)
-    {
-        int res = false; row = -1;
-        for (int n = 0; n < ratios.getRow(); n++)
-            if (!equal_real(ratios.getIndex(n, col), 0)) { res = true; row = n; }
-        return res;
-    }
 public:
-    LinearEquations(const Matrix3D &_ratios, double *_result) : ratios(_ratios)
+    LinearEquations3D(const Matrix3D &_ratios, double *_result) : ratios(_ratios)
     {
-        for (int row = 0; row < ratios.getRow(); row++) result[row] = _result[row];
+        for (unsigned int row = 0; row < ratios.getRow(); row++) result[row] = _result[row];
     }
-    LinearEquations(const Matrix3D &_ratios, Vector3D &_result) : ratios(_ratios)
+    LinearEquations3D(const Matrix3D &_ratios, Vector3D &_result) : ratios(_ratios)
     {
         if (ratios.getRow() != 3) throw Exception(Exception::EQUATIONS_NOT_RESULT);
-        for (int row = 0; row < ratios.getRow(); row++) result[row] = _result.getParam(row);
+        for (unsigned int row = 0; row < ratios.getRow(); row++) result[row] = _result.getParam(row);
     }
-    Vector3D getSolutionOnGauss()
+    bool swapRowsInColum(unsigned int col, unsigned int row) //
     {
-        int row;
-        if(!isFindRowNotNull(0, row)) cout << "no" << endl;
-        cout << row << endl;
+        for (unsigned int i = row; i < ratios.getRows(); i++)
+        {
+            if (!equal_real(ratios.getIndex(i, col), 0))
+            {
+                if (i != row)
+                {
+                    auto vec = ratios.getRow(i); ratios.setRow(i, ratios.getRow(row)); ratios.setRow(row, vec);
+                    double tmp = result[i]; result[i] = result[row]; result[row] = tmp;
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+    void transformDiagonalView() // transform the matrix to a diagonal view
+    {
+        double ratio;
+        for (unsigned int col = 0, row_start = 0; col < ratios.getColums(); col++)
+        {
+            if (swapRowsInColum(col, row_start))
+            {
+                for (unsigned int row = row_start + 1; row < ratios.getRows(); row++)
+                {
+                    ratio = -ratios.getIndex(row, col) / ratios.getIndex(row_start, col); // -a21/a11,-a31/a11,-a41/a11,..
+                    auto vec = ratios.getRow(row);
+                    vec += ratios.getRow(row_start) * ratio;
+                    ratios.setRow(row, vec);
+                    result[row] += result[row_start] * ratio;
+                }
+                row_start++;
+            }
+        }
+        // divide each row of matrix on by first nonzero element
+        for (unsigned int row = 0; row < ratios.getRows(); row++)
+        {
+            double div;
+            for (unsigned int col = 0; col < ratios.getColums(); col++)
+            {
+                if (!equal_real(ratios.getIndex(row, col), 0))
+                {
+                    div = ratios.getIndex(row, col);
+                    break;
+                }
+            }
+            ratios.setRow(row, ratios.getRow(row) / div);
+            result[row] /= div;
+        }
+    }
+    unsigned int countParam(unsigned int row, unsigned int &col)
+    {
+        unsigned int param = 0;
+        for (col = 0; col < ratios.getColums(); col++)
+            if (equal_real(ratios.getIndex(row, col), 0)) param++;
+        return param;
+    }
+    bool checkSolutionOnGauss()
+    {
+        transformDiagonalView();
 
-        return Vector3D(0, 0, 0);
+        int last_row = 0, index_param;
+        // if (a1, a2, a3) == 0 and bn !=0 -> no solution
+        for (unsigned int row = ratios.getRows() - 1; row >= 0; row--)
+        {
+            if (ratios.getRow(row) == 0 && !equal_real(result[row], 0)) return false;
+            else (ratios.getRow(row) != 0) { last_row = row; break; }
+        }
+        if (countParam(last_row, index_param) > 1) return false;
+        solution.setParam(index_param, vec.getParam(index_param))
+
+
+        //solution = {0, 0, 0};
+        return true;
     }
 };
 
-int Intersect(const Segment3D &s1, const Segment3D &s2, Vector3D &cross)
+int Intersect(const Segment3D &s1, const Segment3D &s2, Vector3D &point)
 {
     if (s1.isCollinearity(s2)) return -1; // lines belong to a common line
     if (s1.isParallel(s2)) return -2; // lines is parallel
     if (!s1.isCoplanarity(s2)) return 2; // not belong to a common surface
 
     /*Ratio ratio = getRatioIntersect(s2);
-    cross = line.getVectorFromRario(ratio);
-    if (!s1.isInsideSegment(cross) || !s2.isInsideSegment(cross)) return 1;*/
+    point = line.getVectorFromRario(ratio);
+    if (!s1.isInsideSegment(point) || !s2.isInsideSegment(point)) return 1;*/
 
     return 0;
 }
@@ -418,9 +495,9 @@ int main()
                {4, -6, 16},
                {3, 8, 1});
 
-    Matrix3D M1({0, 1, 2},
-               {0, -6, 16},
-               {1, 8, 1});
+    Matrix3D M1({0, 0, 4},
+                {0, 6, -3},
+                {0, -3, 2});
 
     Vector3D b = {21, 2, 2};
     Vector3D x_check = {62/15.0, -17/15.0, -4/3.0};
@@ -432,8 +509,8 @@ int main()
     Vector3D b_check = M * x_check;
     cout << "b (check) = " << b_check << endl;*/
 
-    M = M1;
-    LinearEquations R(M, b);
+    //M = M1;
+    LinearEquations3D R(M, b);
     Vector3D x = R.getSolutionOnGauss();
     //cout << "x (check) = " << x << endl;
 

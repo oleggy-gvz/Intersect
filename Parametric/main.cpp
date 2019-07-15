@@ -150,14 +150,14 @@ public:
         Vector3D vec = s.start - start;
         return equal_real(vec.mixed_multi(getDirection(), s.getDirection()), 0);
     }
-    int Intersect(const Segment3D &s, Vector3D &cross) const
+    int Intersect(const Segment3D &s, Vector3D &point) const
     {
         if (isCollinearity(s)) return -1; // lines belong to a common line
         if (isParallel(s)) return -2; // lines is parallel
         if (!isCoplanarity(s)) return 2; // not belong to a common surface
         Ratio ratio_s = getRatioIntersect(s);
-        cross = s.getPointFromRario(ratio_s);
-        if (!isInsideSegment(cross) || !s.isInsideSegment(cross)) return 1;
+        point = s.getPointFromRario(ratio_s);
+        if (!isInsideSegment(point) || !s.isInsideSegment(point)) return 1;
         return 0;
     }
     friend ostream& operator<<(ostream &, const Segment3D &);
