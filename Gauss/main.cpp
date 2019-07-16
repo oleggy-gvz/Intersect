@@ -410,16 +410,18 @@ public:
         for (unsigned int row = rang; row < ratios.getRows(); row++)
             if (!equal_real(result[row], 0)) return false; // rang (ratios) != rang (ratios | result)
 
-        for (unsigned int i = 0; i < rang; i++) // number of unknowns = rang (ratios)
+        for (unsigned int i = 0; i < rang; i++) // number of unknowns == rang (ratios)
         {
-            unsigned int index_param = ratios.getColums()-1 - i; // x3, x2, ...
-            unsigned int row = rang-1 - i; // row: 3, 2, ...
-            double val = result[row]; // b_i = ...
+            unsigned int index = ratios.getColums()-1 - i; // index of unknowns, in reverse order
+            unsigned int row = rang-1 - i; // row of current unknown
+            double unknown = result[row];
 
-            for (unsigned int col = row; col < rang - 1; col++)
-                val -= ratios.getIndex(row, col) * solution.getParam(row);
-
-            solution.setParam(index_param, val); // x_i = ...
+            for (unsigned int j = 0; j < i; j++)
+            {
+                unsigned int col = ratios.getColums() - j;
+                unknown -= ratios.getIndex(row, col) * solution.getParam(index + 1);
+            }
+            solution.setParam(index, unknown); // x_i = ...
         }
         return true;
     }
