@@ -156,7 +156,7 @@ public:
     {
         if (this == &m) return *this;
         rows = m.rows; cols = m.cols;
-        for (int i = 0; i < 3; i++) vectors[i] = m.vectors[i];
+        for (int i = 0; i < rows; i++) vectors[i] = m.vectors[i];
         return *this;
     }
     Vector3D operator*(const Vector3D &v) const { return Vector3D(vectors[0].scalar_multi(v), vectors[1].scalar_multi(v), vectors[2].scalar_multi(v)); }
@@ -266,7 +266,11 @@ protected:
     double result[4] = {0};
 
 public:
-    SystemLinearEquations3D(const Matrix3D &_ratios, double *_result) : ratios(_ratios) { for (unsigned int row = 0; row < ratios.getRows(); row++) result[row] = _result[row]; }
+    SystemLinearEquations3D(const Matrix3D &_ratios, double *_result) : ratios(_ratios)
+    {
+        for (unsigned int row = 0; row < ratios.getRows(); row++)
+            result[row] = _result[row];
+    }
     virtual bool calcSolution() = 0;
     Vector3D getSolution()
     {
@@ -277,11 +281,11 @@ public:
 class SystemLinearEquations3D_SolutionGauss : public SystemLinearEquations3D // solving a system of linear equations: ratios * x = result
 {
 private:
-    bool sortRowsInColum(unsigned int col, unsigned int start_row) //
+    bool sortRowsByZero(unsigned int col, unsigned int start_row)
     {
         for (unsigned int row = start_row; row < ratios.getRows(); row++) // row = start_row..rows
             if (!equal_real(ratios.getIndex(row, col), 0)) { swapRows(row, start_row); return true; }
-        return false;
+        return false; // all zero elements in column
     }
     void swapRows(unsigned int row1, unsigned int row2)
     {
@@ -289,21 +293,23 @@ private:
         Vector3D tmp_v = ratios.getRow(row1); ratios.setRow(row1, ratios.getRow(row2)); ratios.setRow(row2, tmp_v);
         double tmp = result[row1]; result[row1] = result[row2]; result[row2] = tmp;
     }
-    unsigned int transformDiagonalView() // transform the matrix to a diagonal view and return rang of matrix ratios
+    unsigned int transformDiagonalView() // transform the matrix to a diagonal view and return rank of matrix ratios
     {
         double ratio;
-        unsigned int count_row = 0;
+        unsigned int rank = 0; // ratios matrix rank
         // transform the matrix to a diagonal view
         for (unsigned int col = 0; col < ratios.getColums(); col++)
         {
-            if (!sortRowsInColum(col, count_row)) continue;
-            for (unsigned int row = count_row + 1; row < ratios.getRows(); row++)
+            if (!sortRowsByZero(col, rank)) continue;
+            for (unsigned int row = rank + 1; row < ratios.getRows(); row++)
             {
-                ratio = -ratios.getIndex(row, col) / ratios.getIndex(count_row, col); // -a21/a11,-a31/a11,-a41/a11,..
-                ratios.setRow(row, ratios.getRow(row) + ratios.getRow(count_row) * ratio);
-                result[row] += result[count_row] * ratio;
+                double a = ratios.getIndex(row, col);
+                if (equal_real(a, 0)) continue;
+                ratio = -a / ratios.getIndex(rank, col); // -a21/a11,-a31/a11,-a41/a11,..
+                ratios.setRow(row, ratios.getRow(row) + ratios.getRow(rank) * ratio);
+                result[row] += result[rank] * ratio;
             }
-            count_row++;
+            rank++;
         }
         // divide each row of matrix on by first nonzero element
         for (unsigned int row = 0; row < ratios.getRows(); row++)
@@ -319,22 +325,22 @@ private:
                 }
             }
         }
-        return count_row;
+        return rank;
     }
 public:
     SystemLinearEquations3D_SolutionGauss(const Matrix3D &_ratios, double *_result) : SystemLinearEquations3D(_ratios, _result) {}
     bool calcSolution()
     {
-        unsigned int rang = transformDiagonalView();
-        for (unsigned int row = rang; row < ratios.getRows(); row++)
-            if (!equal_real(result[row], 0)) return false; // rang (ratios) != rang (ratios | result)
+        unsigned int rank = transformDiagonalView();
+        for (unsigned int row = rank; row < ratios.getRows(); row++)
+            if (!equal_real(result[row], 0)) return false; // rank (ratios) != rank (ratios | result)
 
-        for (unsigned int i = 0; i < rang; i++) // number of unknowns == rang (ratios)
+        for (unsigned int i = 0; i < rank; i++) // number of unknowns == rank (ratios)
         {
-            unsigned int row = rang-1 - i; // row = rang-1...0
-            unsigned int col_start = ratios.getColums() - rang + row;
+            unsigned int row = rank-1 - i; // row = rank-1...0
+            unsigned int col_start = ratios.getColums() - rank + row;
             double unknown = result[row];
-            for (unsigned int col = col_start + 1; col < ratios.getColums(); col++) // col = (cols-rang+row+1)...cols
+            for (unsigned int col = col_start + 1; col < ratios.getColums(); col++) // col = (cols-rank+row+1)...cols
                 unknown -= ratios.getIndex(row, col) * solution.getParam(col);
             solution.setParam(col_start, unknown);
         }
@@ -344,9 +350,9 @@ public:
 
 int Intersect(const Segment3D &s1, const Segment3D &s2, Vector3D &point)
 {
-    /*if (s1.isCollinearity(s2)) return -1; // lines belong to a common line
+    if (s1.isCollinearity(s2)) return -1; // lines belong to a common line
     if (s1.isParallel(s2)) return -2; // lines is parallel
-    if (!s1.isCoplanarity(s2)) return 2; // not belong to a common surface*/
+    if (!s1.isCoplanarity(s2)) return 2; // not belong to a common surface
 
     Vector3D a = s1.getDirection(), A = s1.getStart();
     Vector3D b = s2.getDirection(), B = s2.getStart();
@@ -364,9 +370,7 @@ int Intersect(const Segment3D &s1, const Segment3D &s2, Vector3D &point)
     if (intersect.calcSolution()) point = intersect.getSolution();
     else return 2;
 
-    /*Ratio ratio = getRatioIntersect(s2);
-    point = line.getVectorFromRario(ratio);
-    if (!s1.isInsideSegment(point) || !s2.isInsideSegment(point)) return 1;*/
+    /*if (!s1.isInsideSegment(point) || !s2.isInsideSegment(point)) return 1;*/
 
     return 0;
 }
