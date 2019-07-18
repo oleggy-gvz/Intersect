@@ -16,14 +16,19 @@ public:
     {
         switch(error)
         {
+        // for class Vector3D
         case VECTOR3D_OUT_RANGE:    m_error = "Vector3D (out of range parameter of Vector3D)"; break;
+        // for class Segment3D
         case SEGMENT_EQUAL_POINTS:  m_error = "Segment3D (start and end points of the segment must be different)"; break;
+        // for class Matrix3D
         case MATRIX3D_OUT_RANGE:    m_error = "Matrix3D (out of range)"; break;
         case MATRIX3D_SIZE_FOR_DET: m_error = "Matrix3D determinant (matrix size is not equal 3)"; break;
-        case MATRIX_OUT_RANGE:      m_error = "Matrix (out of range)"; break;
-        case MATRIX_SIZE_FOR_DET:   m_error = "Matrix (matrix size is not equal 3 or 4)"; break;
-        case MATRIX_SIZE_FOR_MULTI: m_error = "Matrix multiply Vector3D (matrix size is not equal 3)"; break;
-        case EQUATIONS_NOT_RESULT:  m_error = "LinearEquations (number of equations is not equal to number of results)"; break;
+        // for class ExtMatrix3D
+        case MATRIX_OUT_RANGE:      m_error = "ExtMatrix3D (out of range)"; break;
+        case MATRIX_SIZE_FOR_DET:   m_error = "ExtMatrix3D (matrix size is not equal 3 or 4)"; break;
+        case MATRIX_SIZE_FOR_MULTI: m_error = "ExtMatrix3D multiply Vector3D (matrix size is not equal 3)"; break;
+        // for class SystemLinearEquations3D
+        case EQUATIONS_NOT_RESULT:  m_error = "SystemLinearEquations3D (number of equations is not equal to number of results)"; break;
         }
     }
     const char* what() const noexcept { return m_error.c_str(); }
@@ -165,15 +170,15 @@ public:
 
 ostream& operator<<(ostream &out, const Matrix3D &m)
 {
-    for (unsigned int i = 0; i < 3; i++)
-    {
+     for (unsigned int row = 0; row < m.rows; row++)
+     {
         out << "|";
-        for (unsigned int j = 0; j < 3; j++)
+        for (unsigned int col = 0; col < m.cols; col++)
         {
             out.width(3);
-            out << m.getIndex(i, j) << (j == 2 ? "" : " ");
+            out << m.vectors[row].getParam(col) << (col == m.rows-1 ? "" : " ");
         }
-        out << "|" << (i == 2 ? "" : "\n");
+        out << "|" << (row == m.rows-1 ? "" : "\n");
     }
     return out;
 }
@@ -245,15 +250,15 @@ public:
 
 ostream& operator<<(ostream &out, const ExtMatrix3D &m)
 {
-    for (unsigned int i = 0; i < m.rows; i++)
+    for (unsigned int row = 0; row < m.rows; row++)
     {
         out << "|";
-        for (unsigned int j = 0; j < m.cols; j++)
+        for (unsigned int col = 0; col < m.cols; col++)
         {
             out.width(3);
-            out << m.matrix[i][j] << (j == m.cols-1 ? "" : " ");
+            out << m.matrix[row][col] << (col == m.cols-1 ? "" : " ");
         }
-        out << "|" << (i == m.rows-1 ? "" : "\n");
+        out << "|" << (row == m.rows-1 ? "" : "\n");
     }
     return out;
 }
@@ -271,7 +276,7 @@ public:
         for (unsigned int row = 0; row < ratios.getRows(); row++)
             result[row] = _result[row];
     }
-    virtual bool calcSolution() = 0;
+    virtual bool calculateSolution() = 0;
     Vector3D getSolution()
     {
         return solution;
@@ -281,7 +286,7 @@ public:
 class SystemLinearEquations3D_SolutionGauss : public SystemLinearEquations3D // solving a system of linear equations: ratios * x = result
 {
 private:
-    bool sortRowsByZero(unsigned int col, unsigned int start_row)
+    bool sortRowsByElementColum(unsigned int col, unsigned int start_row)
     {
         for (unsigned int row = start_row; row < ratios.getRows(); row++) // row = start_row..rows
             if (!equal_real(ratios.getIndex(row, col), 0)) { swapRows(row, start_row); return true; }
@@ -293,14 +298,13 @@ private:
         Vector3D tmp_v = ratios.getRow(row1); ratios.setRow(row1, ratios.getRow(row2)); ratios.setRow(row2, tmp_v);
         double tmp = result[row1]; result[row1] = result[row2]; result[row2] = tmp;
     }
-    unsigned int transformDiagonalView() // transform the matrix to a diagonal view and return rank of matrix ratios
+    unsigned int directAction() // transform the matrix to a diagonal view and return rank of matrix ratios
     {
         double ratio;
-        unsigned int rank = 0; // ratios matrix rank
-        // transform the matrix to a diagonal view
+        unsigned int rank = 0; // ratios matrix rank, equal to number of rows with unknowns
         for (unsigned int col = 0; col < ratios.getColums(); col++)
         {
-            if (!sortRowsByZero(col, rank)) continue;
+            if (!sortRowsByElementColum(col, rank)) continue;
             for (unsigned int row = rank + 1; row < ratios.getRows(); row++)
             {
                 double a = ratios.getIndex(row, col);
@@ -311,12 +315,32 @@ private:
             }
             rank++;
         }
-        // divide each row of matrix on by first nonzero element
+        return rank;
+    }
+    void reversAction(unsigned int rank)
+    {
+        if (rank < 2) return;
+        double ratio;
+        for (unsigned int col = ratios.getColums() - 1; col > 0; col--)
+        {
+            for (unsigned int row = rank-2; row < rank; row--)
+            {
+                 double a = ratios.getIndex(row, col);
+                 if (equal_real(a, 0)) continue;
+                 ratio = -a / ratios.getIndex(rank-1, col);
+                 ratios.setRow(row, ratios.getRow(row) + ratios.getRow(rank-1) * ratio);
+                 result[row] += result[rank-1] * ratio;
+            }
+            rank--;
+        }
+    }
+    void normalizeMainDiagonal() // make main diagonal of matrix are equal to 1
+    {
         for (unsigned int row = 0; row < ratios.getRows(); row++)
         {
             for (unsigned int col = 0; col < ratios.getColums(); col++)
             {
-                double div = ratios.getIndex(row, col);
+                double div = ratios.getIndex(row, col); // divide each row of matrix on by first nonzero element
                 if (!equal_real(div, 0))
                 {
                     ratios.setRow(row, ratios.getRow(row) / div);
@@ -325,25 +349,31 @@ private:
                 }
             }
         }
-        return rank;
     }
 public:
     SystemLinearEquations3D_SolutionGauss(const Matrix3D &_ratios, double *_result) : SystemLinearEquations3D(_ratios, _result) {}
-    bool calcSolution()
+    bool calculateSolution()
     {
-        unsigned int rank = transformDiagonalView();
+        unsigned int rank = directAction();
+        reversAction(rank);
+        normalizeMainDiagonal();
+
         for (unsigned int row = rank; row < ratios.getRows(); row++)
             if (!equal_real(result[row], 0)) return false; // rank (ratios) != rank (ratios | result)
 
-        for (unsigned int i = 0; i < rank; i++) // number of unknowns == rank (ratios)
+        /*
+        // use if before not been call method reversAction(rank);
+        for (unsigned int row = rank-1; row < rank; row--) // row = rank-1...0
         {
-            unsigned int row = rank-1 - i; // row = rank-1...0
             unsigned int col_start = ratios.getColums() - rank + row;
             double unknown = result[row];
             for (unsigned int col = col_start + 1; col < ratios.getColums(); col++) // col = (cols-rank+row+1)...cols
                 unknown -= ratios.getIndex(row, col) * solution.getParam(col);
+            //unknown /= ratios.getIndex(row, col_start); // use if before not been call method normalizeMainDiagonal();
             solution.setParam(col_start, unknown);
-        }
+        }*/
+
+        for (unsigned int i = 0; i < rank; i++) solution.setParam(i, result[i]);
         return true;
     }
 };
@@ -367,7 +397,7 @@ int Intersect(const Segment3D &s1, const Segment3D &s2, Vector3D &point)
 
     SystemLinearEquations3D_SolutionGauss intersect(M, res);
 
-    if (intersect.calcSolution()) point = intersect.getSolution();
+    if (intersect.calculateSolution()) point = intersect.getSolution();
     else return 2;
 
     /*if (!s1.isInsideSegment(point) || !s2.isInsideSegment(point)) return 1;*/
@@ -399,7 +429,7 @@ void printResultIntersect(const Segment3D &s1, const Segment3D &s2)
 int main()
 {
     Segment3D s1 = {{1, 1, 0}, {2, 2, 0}}, s2 = {{-3, -3, 0}, {-4, -4, 0}};
-    /*printResultIntersect(s1, s2);
+    printResultIntersect(s1, s2);
     cout << endl;
 
     s1 = {{1, 1, 0}, {2, 2, 0}};
@@ -420,35 +450,15 @@ int main()
     s1 = {{0, 0.5, 2}, {0, 0.5, 1}};
     s2 = {{0, 2, 0.5}, {0, 1, 0.5}};
     printResultIntersect(s1, s2);
-    cout << endl;*/
+    cout << endl;
+
+    /*Vector3D A = {1, 2, 1}; Vector3D vec_a = {3, 1, 4}; s1 = {A, A + vec_a};
+    Vector3D B = {1, 2, 4}; Vector3D vec_b = {3, 1, 1}; s2 = {B, B + vec_b};*/
 
     Vector3D A = {3, -3, 2}; Vector3D vec_a = {-1, 1, 2}; s1 = {A, A + vec_a};
     Vector3D B = {-1, 4, -26}; Vector3D vec_b = {3, -4, 6}; s2 = {B, B + vec_b};
     printResultIntersect(s1, s2);
     cout << endl;
-
-    /*Matrix3D M1({6, 1, 2},
-               {4, -6, 16},
-               {3, 8, 1});
-
-    Matrix3D M(M1);
-    double b[] = {21, 2, 2};
-
-    Vector3D x_check = {62/15.0, -17/15.0, -4/3.0};
-
-    cout << "M = " << endl << M << endl;
-    cout << "x (check) = " << x_check << endl;
-
-    Vector3D b_check = M * x_check;
-    cout << "b (check) = " << b_check << endl;
-
-    SystemLinearEquations3D_SolutionGauss R(M, b);
-    if (R.calcSolution())
-    {
-        Vector3D x = R.getSolution();
-        cout << "x = " << x << endl;
-    }*/
-
 
     /*Vector3D a = {1, 2, 3};
     cout << "a = " << a << endl;
