@@ -16,7 +16,7 @@ public:
 class SystemLinearEquations3D_SolutionGauss : public SystemLinearEquations3D // solving a system of linear equations: ratios * x = result
 {
 private:
-    bool sortRowsByElementColum(unsigned int col, unsigned int start_row)
+    bool sortRowsByNonZeroElementColum(unsigned int col, unsigned int start_row)
     {
         for (unsigned int row = start_row; row < ratios.getRows(); row++) // row = start_row..rows
             if (!equal_real(ratios.getIndex(row, col), 0)) { swapRows(row, start_row); return true; }
@@ -41,7 +41,7 @@ private:
         unsigned int rank = 0; // ratios matrix rank, equal to number of rows with unknowns
         for (unsigned int col = 0; col < ratios.getColums() - 1; col++) // row = 0..cols-1
         {
-            if (!sortRowsByElementColum(col, rank)) continue;
+            if (!sortRowsByNonZeroElementColum(col, rank)) continue;
             for (unsigned int row = rank + 1; row < ratios.getRows(); row++)
             {
                 double a = ratios.getIndex(row, col);
@@ -49,7 +49,11 @@ private:
                 ratio = -a / ratios.getIndex(rank, col); // -a21/a11,-a31/a11,-a41/a11,..
 
                 for (unsigned int j = 0; j < ratios.getColums(); j++)
-                    ratios.setIndex(row, j, ratios.getIndex(row, j) + ratios.getIndex(rank, j) * ratio);
+                {
+                    double new_ratio = ratios.getIndex(row, j) + ratios.getIndex(rank, j) * ratio;
+                    new_ratio = equal_real(new_ratio, 0) ? 0 : new_ratio;
+                    ratios.setIndex(row, j, new_ratio);
+                }
             }
             rank++;
         }
@@ -67,7 +71,11 @@ private:
                  if (equal_real(a, 0)) continue;
                  ratio = -a / ratios.getIndex(rank-1, col);
                  for (unsigned int j = 0; j < ratios.getColums(); j++)
-                     ratios.setIndex(row, j, ratios.getIndex(row, j) + ratios.getIndex(rank-1, j) * ratio);
+                 {
+                     double new_ratio = ratios.getIndex(row, j) + ratios.getIndex(rank-1, j) * ratio;
+                     new_ratio = equal_real(new_ratio, 0) ? 0 : new_ratio;
+                     ratios.setIndex(row, j, new_ratio);
+                 }
             }
             rank--;
         }
@@ -102,10 +110,10 @@ public:
             double res = ratios.getIndex(row, ratios.getColums()-1);
             if (!equal_real(res, 0)) return false; // rank (ratios) != rank (ratios | result)
         }
-        return true;
-
         for (unsigned int row = 0; row < rank; row++) solution[row] = ratios.getIndex(row, ratios.getColums()-1);
         size = rank;
+
+        return true;
     }
 };
 

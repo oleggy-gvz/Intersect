@@ -7,7 +7,6 @@ class SystemLinearEquations3D // solving a system of linear equations: ratios * 
 {
 protected:
     Matrix3D ratios;
-    Vector3D solution;
     double result[4] = {0};
 
 public:
@@ -16,17 +15,13 @@ public:
         for (unsigned int row = 0; row < ratios.getRows(); row++)
             result[row] = res[row];
     }
-    virtual bool calculateSolution() = 0;
-    Vector3D getSolution()
-    {
-        return solution;
-    }
+    virtual bool calculateSolution(Vector3D &solution) = 0;
 };
 
 class SystemLinearEquations3D_SolutionGauss : public SystemLinearEquations3D // solving a system of linear equations: ratios * x = result
 {
 private:
-    bool sortRowsByElementColum(unsigned int col, unsigned int start_row)
+    bool sortRowsByNonZeroElementColum(unsigned int col, unsigned int start_row)
     {
         for (unsigned int row = start_row; row < ratios.getRows(); row++) // row = start_row..rows
             if (!equal_real(ratios.getIndex(row, col), 0)) { swapRows(row, start_row); return true; }
@@ -44,7 +39,7 @@ private:
         unsigned int rank = 0; // ratios matrix rank, equal to number of rows with unknowns
         for (unsigned int col = 0; col < ratios.getColums(); col++)
         {
-            if (!sortRowsByElementColum(col, rank)) continue;
+            if (!sortRowsByNonZeroElementColum(col, rank)) continue;
             for (unsigned int row = rank + 1; row < ratios.getRows(); row++)
             {
                 double a = ratios.getIndex(row, col);
@@ -92,7 +87,7 @@ private:
     }
 public:
     SystemLinearEquations3D_SolutionGauss(const Matrix3D &_ratios, double *_result) : SystemLinearEquations3D(_ratios, _result) {}
-    bool calculateSolution()
+    bool calculateSolution(Vector3D &solution)
     {
         unsigned int rank = directAction();
         reversAction(rank);
@@ -100,18 +95,6 @@ public:
 
         for (unsigned int row = rank; row < ratios.getRows(); row++)
             if (!equal_real(result[row], 0)) return false; // rank (ratios) != rank (ratios | result)
-
-        /*
-        // use if before not been call method reversAction(rank);
-        for (unsigned int row = rank-1; row < rank; row--) // row = rank-1...0
-        {
-            unsigned int col_start = ratios.getColums() - rank + row;
-            double unknown = result[row];
-            for (unsigned int col = col_start + 1; col < ratios.getColums(); col++) // col = (cols-rank+row+1)...cols
-                unknown -= ratios.getIndex(row, col) * solution.getParam(col);
-            //unknown /= ratios.getIndex(row, col_start); // use if before not been call method normalizeMainDiagonal();
-            solution.setParam(col_start, unknown);
-        }*/
 
         for (unsigned int i = 0; i < rank; i++) solution.setParam(i, result[i]);
         return true;

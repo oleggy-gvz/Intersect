@@ -48,6 +48,7 @@ public:
         if (index >= size) throw Exception(Exception::VECTOR3D_OUT_RANGE);
         else
         {
+            val = equal_real(val, 0) ? 0 : val;
             switch(index)
             {
             case 0: X = val; break;
@@ -70,8 +71,13 @@ public:
         else res = equal_real(X / v.X, Y / v.Y) && equal_real(Y / v.Y, Z / v.Z); // any other cases
         return res;
     }
-    Vector3D& operator=(const Vector3D &v) { if (this == &v) return *this; X = v.X; Y = v.Y; Z = v.Z; return *this; }
-
+    Vector3D& operator=(const Vector3D &v)
+    {
+        if (this == &v) return *this;
+        size = v.size;
+        for (int i = 0; i < size; i++) setParam(i, v.getParam(i));
+        return *this;
+    }
     Vector3D operator+(const Vector3D &v) const { return Vector3D(X+v.X, Y+v.Y, Z+v.Z); }
     Vector3D operator-(const Vector3D &v) const { return Vector3D(X-v.X, Y-v.Y, Z-v.Z); }
     Vector3D operator*(double k) const { return Vector3D(X * k, Y * k, Z * k); }

@@ -1,6 +1,6 @@
 #include "Segment3D.h"
 
-#define EX_MATRIX
+//#define EX_MATRIX
 
 #ifdef EX_MATRIX
 #include "ExtMatrix3D\SysLinearEquat3D.h"
@@ -66,8 +66,7 @@ int Intersect(const Segment3D &s1, const Segment3D &s2, Vector3D &point)
 
     SystemLinearEquations3D_SolutionGauss intersect(M, res);
 
-    if (intersect.calculateSolution()) point = intersect.getSolution();
-    else return 2;
+    if (!intersect.calculateSolution(point)) return 2;
 
     /*if (!s1.isInsideSegment(point) || !s2.isInsideSegment(point)) return 1;*/
 
@@ -100,7 +99,7 @@ void printResultIntersect(const Segment3D &s1, const Segment3D &s2)
 int main()
 {
     Segment3D s1 = {{1, 1, 0}, {2, 2, 0}}, s2 = {{-3, -3, 0}, {-4, -4, 0}};
-    /*printResultIntersect(s1, s2);
+    printResultIntersect(s1, s2);
     cout << endl;
 
     s1 = {{1, 1, 0}, {2, 2, 0}};
@@ -121,13 +120,15 @@ int main()
     s1 = {{0, 0.5, 2}, {0, 0.5, 1}};
     s2 = {{0, 2, 0.5}, {0, 1, 0.5}};
     printResultIntersect(s1, s2);
-    cout << endl;*/
+    cout << endl;
 
     Vector3D A = {1, 2, 1}; Vector3D vec_a = {3, 1, 4}; s1 = {A, A + vec_a};
     Vector3D B = {1, 2, 4}; Vector3D vec_b = {3, 1, 1}; s2 = {B, B + vec_b};
+    printResultIntersect(s1, s2);
+    cout << endl;
 
-    /*Vector3D A = {3, -3, 2}; Vector3D vec_a = {-1, 1, 2}; s1 = {A, A + vec_a};
-    Vector3D B = {-1, 4, -26}; Vector3D vec_b = {3, -4, 6}; s2 = {B, B + vec_b};*/
+    A = {3, -3, 2}; vec_a = {-1, 1, 2}; s1 = {A, A + vec_a};
+    B = {-1, 4, -26}; vec_b = {3, -4, 6}; s2 = {B, B + vec_b};
     printResultIntersect(s1, s2);
     cout << endl;
 
