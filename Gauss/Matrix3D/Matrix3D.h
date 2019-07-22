@@ -16,19 +16,19 @@ public:
     Matrix3D(const Vector3D &v1, const Vector3D &v2, const Vector3D &v3, const Vector3D &v4) { setMatrix3D(v1, v2, v3, v4); }
     void setMatrix3D(const Vector3D &v1, const Vector3D &v2, const Vector3D &v3) { rows = 3; cols = 3; vectors[0] = v1; vectors[1] = v2; vectors[2] = v3; }
     void setMatrix3D(const Vector3D &v1, const Vector3D &v2, const Vector3D &v3, const Vector3D &v4) { rows = 4; cols = 3; vectors[0] = v1; vectors[1] = v2; vectors[2] = v3; vectors[3] = v4; }
-    unsigned int getRows() const { return rows; }
-    unsigned int getColums() const { return cols; }
+    unsigned int getRows() { return rows; }
+    unsigned int getColums() { return cols; }
     void setRow(unsigned int row, const Vector3D &v)
     {
         if (row >= rows) throw Exception(Exception::MATRIX3D_OUT_RANGE);
         vectors[row] = v;
     }
-    Vector3D getRow(unsigned int row) const
+    Vector3D getRow(unsigned int row)
     {
         if (row >= rows) throw Exception(Exception::MATRIX3D_OUT_RANGE);
         return vectors[row];
     }
-    double getIndex(unsigned int row, unsigned int col) const
+    double getIndex(unsigned int row, unsigned int col)
     {
         if (row >= rows || col >= cols) throw Exception(Exception::MATRIX3D_OUT_RANGE);
         return vectors[row].getParam(col);
@@ -42,10 +42,10 @@ public:
     {
         if (this == &m) return *this;
         rows = m.rows; cols = m.cols;
-        for (int i = 0; i < rows; i++) vectors[i] = m.vectors[i];
+        for (unsigned int i = 0; i < rows; i++) vectors[i] = m.vectors[i];
         return *this;
     }
-    Vector3D operator*(const Vector3D &v) const { return Vector3D(vectors[0].scalar_multi(v), vectors[1].scalar_multi(v), vectors[2].scalar_multi(v)); }
+    Vector3D operator*(const Vector3D &v) { return Vector3D(vectors[0].scalar_multi(v), vectors[1].scalar_multi(v), vectors[2].scalar_multi(v)); }
     friend ostream& operator<<(ostream &, const Matrix3D &);
 };
 

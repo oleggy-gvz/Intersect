@@ -27,9 +27,11 @@ void printResultIntersect(const Segment3D &s1, const Segment3D &s2)
 
 int main()
 {
-    Segment3D s1 = {{1, 1, 0}, {2, 2, 0}}, s2 = {{-3, -3, 0}, {-4, -4, 0}};
+    Segment3D s1 = {{1, 1, 1}, {2, 2, 2}}, s2 = {{-3, -3, -3}, {-4, -4, -4}};
     printResultIntersect(s1, s2);
     cout << endl;
+    //Vector3D p = {2.1, 2.1, 2.1};
+    //bool b = s1.isLyingOnSegment(p);
 
     s1 = {{1, 1, 0}, {2, 2, 0}};
     s2 = {{2, 1, 0}, {3, 2, 0}};

@@ -35,7 +35,7 @@ private:
 
         delete []tmp_row;
     }
-    unsigned int directAction() // transform the matrix to a diagonal view and return rank of matrix ratios
+    unsigned int directAction() // make all coefficients equal to zero which are below the main diagonal
     {
         double ratio;
         unsigned int rank = 0; // ratios matrix rank, equal to number of rows with unknowns
@@ -59,7 +59,7 @@ private:
         }
         return rank;
     }
-    void reversAction(unsigned int rank)
+    void reversAction(unsigned int rank) // make all coefficients equal to zero which are higher the main diagonal
     {
         if (rank < 2) return;
         double ratio;
@@ -82,18 +82,13 @@ private:
     }
     void normalizeMainDiagonal() // make main diagonal of matrix are equal to 1
     {
-        for (unsigned int row = 0; row < ratios.getRows()-1; row++)
+        for (unsigned int i = 0; i < ratios.getRows() && i < ratios.getColums(); i++)
         {
-            for (unsigned int col = 0; col < ratios.getColums()-1; col++)
-            {
-                double div = ratios.getIndex(row, col); // divide each row of matrix on by first nonzero element
-                if (!equal_real(div, 0))
-                {
-                    for (unsigned int j = 0; j < ratios.getColums(); j++)
-                        ratios.setIndex(row, j, ratios.getIndex(row, j) / div);
-                    break;
-                }
-            }
+            double led_elem = ratios.getIndex(i, i); // divide each row of matrix on by lead element
+            if (equal_real(led_elem, 0) || equal_real(led_elem, 1)) continue;
+
+            for (unsigned int j = i; j < ratios.getColums(); j++)
+                ratios.setIndex(i, j, ratios.getIndex(i, j) / led_elem);
         }
     }
 public:

@@ -1,14 +1,14 @@
 #include "Segment3D.h"
 
-//#define EX_MATRIX
+#define EXT_MATRIX3D
 
-#ifdef EX_MATRIX
+#ifdef EXT_MATRIX3D
 #include "ExtMatrix3D\SysLinearEquat3D.h"
 #else
 #include "Matrix3D\SysLinearEquat3D.h"
 #endif
 
-#ifdef EX_MATRIX
+#ifdef EXT_MATRIX3D
 
 int Intersect(const Segment3D &s1, const Segment3D &s2, Vector3D &point)
 {
@@ -34,13 +34,10 @@ int Intersect(const Segment3D &s1, const Segment3D &s2, Vector3D &point)
 
     double res[4];
     unsigned int size;
-    if (intersect.calculateSolution(res, size))
-    {
-        for (int i = 0; i < point.getSize(); i++) point.setParam(i, res[i]);
-    }
-    else return 2;
+    if (!intersect.calculateSolution(res, size)) return 2;
+    for (unsigned int i = 0; i < size; i++) point.setParam(i, res[i]);
 
-    /*if (!s1.isInsideSegment(point) || !s2.isInsideSegment(point)) return 1;*/
+    if (!s1.isLyingOnSegment(point) || !s2.isLyingOnSegment(point)) return 1;
 
     return 0;
 }
@@ -68,7 +65,7 @@ int Intersect(const Segment3D &s1, const Segment3D &s2, Vector3D &point)
 
     if (!intersect.calculateSolution(point)) return 2;
 
-    /*if (!s1.isInsideSegment(point) || !s2.isInsideSegment(point)) return 1;*/
+    if (!s1.isLyingOnSegment(point) || !s2.isLyingOnSegment(point)) return 1;
 
     return 0;
 }
@@ -98,9 +95,11 @@ void printResultIntersect(const Segment3D &s1, const Segment3D &s2)
 
 int main()
 {
-    Segment3D s1 = {{1, 1, 0}, {2, 2, 0}}, s2 = {{-3, -3, 0}, {-4, -4, 0}};
+    Segment3D s1 = {{1, 1, 1}, {2, 2, 2}}, s2 = {{-3, -3, -3}, {-4, -4, -4}};
     printResultIntersect(s1, s2);
     cout << endl;
+    //Vector3D p = {2.1, 2.1, 2.1};
+    //bool b = s1.isLyingOnSegment(p);
 
     s1 = {{1, 1, 0}, {2, 2, 0}};
     s2 = {{2, 1, 0}, {3, 2, 0}};

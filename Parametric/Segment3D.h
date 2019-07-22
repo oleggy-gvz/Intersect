@@ -43,7 +43,12 @@ private:
         Ratio ratio_start = getRatio(start);
         Ratio ratio_end = getRatio(end);
         bool res;
-        if (ratio.isX)      res = ratio_start.x <= ratio.x && ratio.x <= ratio_end.x;
+        if (ratio.isX)
+        {
+            //res = ratio_start.x <= ratio.x && ratio.x <= ratio_end.x;
+            // TODO: отдельная функция больше или равно / меньше или равно
+            res = (equal_real(ratio_start.x, ratio.x) || ratio_start.x > ratio.x) && (equal_real(ratio.x, ratio_end.x) || ratio.x > ratio_end.x);
+        }
         else if (ratio.isY) res = ratio_start.y <= ratio.y && ratio.y <= ratio_end.y;
         else if (ratio.isZ) res = ratio_start.z <= ratio.z && ratio.z <= ratio_end.z;
         else                res = ratio_start.x <= ratio.x && ratio.x <= ratio_end.x; // any axis

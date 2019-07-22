@@ -71,18 +71,13 @@ private:
     }
     void normalizeMainDiagonal() // make main diagonal of matrix are equal to 1
     {
-        for (unsigned int row = 0; row < ratios.getRows(); row++)
+        for (unsigned int i = 0; i < ratios.getRows() && i < ratios.getColums(); i++)
         {
-            for (unsigned int col = 0; col < ratios.getColums(); col++)
-            {
-                double div = ratios.getIndex(row, col); // divide each row of matrix on by first nonzero element
-                if (!equal_real(div, 0))
-                {
-                    ratios.setRow(row, ratios.getRow(row) / div);
-                    result[row] /= div;
-                    break;
-                }
-            }
+            double led_elem = ratios.getIndex(i, i); // divide each row of matrix on by lead element
+            if (equal_real(led_elem, 0) || equal_real(led_elem, 1)) continue;
+
+            ratios.setRow(i, ratios.getRow(i) / led_elem);
+            result[i] /= led_elem;
         }
     }
 public:

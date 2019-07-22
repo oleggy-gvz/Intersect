@@ -23,6 +23,20 @@ public:
     }
     bool isParallel(const Segment3D &s) const { return getDirection().isCollinearity(s.getDirection()); }
     Vector3D getStart() const { return start; }
+    bool isLyingOnSegment(const Vector3D &point) const
+    {
+        Vector3D vec1 = point - start;
+        Vector3D vec2 = point - end;
+        if (!getDirection().isCollinearity(vec1)) return false;
+        double len = getDirection().getLenght();
+        double len1 = vec1.getLenght();
+        double len2 = vec2.getLenght();
+        return (equal_real(len, len1) || len > len1) && (equal_real(len, len2) || len > len2);
+    }
+    double getLeght()
+    {
+        return getDirection().getLenght();
+    }
     Vector3D getEnd() const { return end; }
     Vector3D getDirection() const { return end - start; }
     bool isCoplanarity(const Segment3D &line) const // belong to a common 2D surface

@@ -23,33 +23,43 @@ private:
 
 public:
     ExtMatrix3D(const ExtMatrix3D &m) { *this = m; }
+    ExtMatrix3D(double m[4][4]) { setMatrix(m); }
     ExtMatrix3D(const Vector3D &v1, const Vector3D &v2, const Vector3D &v3) { setMatrix(v1, v2, v3); }
     ExtMatrix3D(const Vector3D v[4], double b[4]) { setMatrix(v, b); }
     void setMatrix(const Vector3D &v1, const Vector3D &v2, const Vector3D &v3)
     {
         rows = 3; cols = 3;
-        for (unsigned int col = 0; col < cols; col++){ matrix[0][col] = v1.getParam(col); matrix[1][col] = v2.getParam(col); matrix[2][col] = v3.getParam(col); }
+        for (unsigned int col = 0; col < cols; col++)
+        {
+            matrix[0][col] = v1.getParam(col); matrix[1][col] = v2.getParam(col); matrix[2][col] = v3.getParam(col);
+        }
     }
     void setMatrix(const Vector3D v[4], double result[4])
     {
         rows = 4; cols = 4;
         for (unsigned int row = 0; row < rows; row++)
             for (unsigned int col = 0; col < v->getSize(); col++) matrix[row][col] = v[row].getParam(col);
-        for (unsigned int row = 0; row < rows; row++) matrix[row][cols-1] = result[row];
+        for (unsigned int row = 0; row < rows; row++) setIndex(row, cols-1, result[row]);
     }
-    unsigned int getRows() const { return rows; }
-    unsigned int getColums() const { return cols; }
+    void setMatrix(double m[4][4])
+    {
+        rows = 4; cols = 4;
+        for (unsigned int row = 0; row < 4; row++)
+            for (unsigned int col = 0; col < 4; col++) setIndex(row, col, m[row][col]);
+    }
+    unsigned int getRows() { return rows; }
+    unsigned int getColums() { return cols; }
     Vector3D getVector(unsigned int row) const
     {
-        if (row > 3) throw Exception(Exception::MATRIX_OUT_RANGE);
+        if (row >= rows) throw Exception(Exception::MATRIX_OUT_RANGE);
         return Vector3D(matrix[row][0], matrix[row][1], matrix[row][2]);
     }
-    double setIndex(unsigned int row, unsigned int col, double val)
+    void setIndex(unsigned int row, unsigned int col, double val)
     {
         if (row >= rows || col >= cols) throw Exception(Exception::MATRIX_OUT_RANGE);
-        matrix[row][col] = val;
+        matrix[row][col] = equal_real(val, 0) ? 0 : val;
     }
-    double getIndex(unsigned int row, unsigned int col) const
+    double getIndex(unsigned int row, unsigned int col)
     {
         if (row >= rows || col >= cols) throw Exception(Exception::MATRIX_OUT_RANGE);
         return matrix[row][col];
