@@ -4,15 +4,9 @@
 #include <iostream>
 #include <math.h>
 #include "Exeption.h"
+#include "NumComp.h"
 
 using namespace std;
-
-bool equal_real(double a, double b)
-{
-    double eps = 0.0000001;
-    double abs = a < b ? b - a : a - b;
-    return abs < eps ? true : false;
-}
 
 class Vector3D
 {

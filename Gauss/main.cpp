@@ -1,14 +1,14 @@
 #include "Segment3D.h"
 
-#define EXT_MATRIX3D
+//#define MATRIX_4x4
 
-#ifdef EXT_MATRIX3D
-#include "ExtMatrix3D\SysLinearEquat3D.h"
+#ifdef MATRIX_4x4
+#include "Matrix4x4\SysLinearEquat3D.h"
 #else
 #include "Matrix3D\SysLinearEquat3D.h"
 #endif
 
-#ifdef EXT_MATRIX3D
+#ifdef MATRIX_4x4
 
 int Intersect(const Segment3D &s1, const Segment3D &s2, Vector3D &point)
 {
@@ -18,18 +18,12 @@ int Intersect(const Segment3D &s1, const Segment3D &s2, Vector3D &point)
 
     Vector3D a = s1.getDirection(), A = s1.getStart();
     Vector3D b = s2.getDirection(), B = s2.getStart();
-    Vector3D V[4] = {
-                        {a.getY(), -a.getX(),         0},
-                        {       0,  a.getZ(), -a.getY()},
-                        {b.getY(), -b.getX(),         0},
-                        {       0,  b.getZ(), -b.getY()}
-                    };
-    double result[4] = {a.getY() * A.getX() - a.getX() * A.getY(),
-                        a.getZ() * A.getY() - a.getY() * A.getZ(),
-                        b.getY() * B.getX() - b.getX() * B.getY(),
-                        b.getZ() * B.getY() - b.getY() * B.getZ()};
-
-    ExtMatrix3D M(V, result);
+    double matrix[4][4] = {
+                        {a.getY(),  -a.getX(),          0,    a.getY() * A.getX() - a.getX() * A.getY()},
+                        {       0,  a.getZ(),   -a.getY(),    a.getZ() * A.getY() - a.getY() * A.getZ()},
+                        {b.getY(),  -b.getX(),          0,    b.getY() * B.getX() - b.getX() * B.getY()},
+                        {       0,  b.getZ(),   -b.getY(),    b.getZ() * B.getY() - b.getY() * B.getZ()}};
+    Matrix4x4 M(matrix);
     SystemLinearEquations3D_SolutionGauss intersect(M);
 
     double res[4];
@@ -95,6 +89,14 @@ void printResultIntersect(const Segment3D &s1, const Segment3D &s2)
 
 int main()
 {
+    cout << "Gauss method";
+#ifdef MATRIX_4x4
+    cout << " (use Matrix 4*4)" << endl;
+#else
+    cout << " (use Matrix3D)" << endl;
+#endif
+    cout << "***********************************" << endl << endl;
+
     Segment3D s1 = {{1, 1, 1}, {2, 2, 2}}, s2 = {{-3, -3, -3}, {-4, -4, -4}};
     printResultIntersect(s1, s2);
     cout << endl;

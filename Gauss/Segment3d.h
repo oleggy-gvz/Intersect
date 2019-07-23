@@ -5,7 +5,7 @@
 
 class Segment3D
 {
-private:
+protected:
     Vector3D start;
     Vector3D end;
 
@@ -29,9 +29,7 @@ public:
         Vector3D vec2 = point - end;
         if (!getDirection().isCollinearity(vec1)) return false;
         double len = getDirection().getLenght();
-        double len1 = vec1.getLenght();
-        double len2 = vec2.getLenght();
-        return (equal_real(len, len1) || len > len1) && (equal_real(len, len2) || len > len2);
+        return more_or_equal_real(len, vec1.getLenght()) && more_or_equal_real(len, vec2.getLenght());
     }
     double getLeght()
     {

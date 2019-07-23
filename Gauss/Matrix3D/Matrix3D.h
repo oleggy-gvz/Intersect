@@ -45,7 +45,6 @@ public:
         for (unsigned int i = 0; i < rows; i++) vectors[i] = m.vectors[i];
         return *this;
     }
-    Vector3D operator*(const Vector3D &v) { return Vector3D(vectors[0].scalar_multi(v), vectors[1].scalar_multi(v), vectors[2].scalar_multi(v)); }
     friend ostream& operator<<(ostream &, const Matrix3D &);
 };
 

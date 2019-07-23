@@ -7,4 +7,4 @@ SOURCES += \
         main.cpp
 
 HEADERS += \
-    Segment3D.h
+    Segment3Dext.h

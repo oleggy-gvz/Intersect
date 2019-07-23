@@ -1,4 +1,4 @@
-#include "Segment3D.h"
+#include "Segment3Dext.h"
 
 using namespace std;
 
@@ -9,7 +9,8 @@ void printResultIntersect(const Segment3D &s1, const Segment3D &s2)
     Vector3D point;
     cout << "segment 1 = " << s1 << endl;
     cout << "segment 2 = " << s2 << endl;
-    int res = s1.Intersect(s2, point);
+    Segment3D_Ext s1_ext(s1);
+    int res = s1_ext.Intersect(s2, point);
     if (res == 0) cout << "point of intersection is " << point << endl;
     else
     {
@@ -27,6 +28,9 @@ void printResultIntersect(const Segment3D &s1, const Segment3D &s2)
 
 int main()
 {
+    cout << "Parametric method" << endl;
+    cout << "***********************************" << endl << endl;
+
     Segment3D s1 = {{1, 1, 1}, {2, 2, 2}}, s2 = {{-3, -3, -3}, {-4, -4, -4}};
     printResultIntersect(s1, s2);
     cout << endl;

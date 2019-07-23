@@ -1,15 +1,15 @@
 #ifndef SYSTEM_LINEAR_EQUATIONS_3D_H
 #define SYSTEM_LINEAR_EQUATIONS_3D_H
 
-#include "ExtMatrix3D.h"
+#include "Matrix4x4.h"
 
 class SystemLinearEquations3D // solving a system of linear equations: ratios * x = result
 {
 protected:
-    ExtMatrix3D ratios;
+    Matrix4x4 ratios;
 
 public:
-    SystemLinearEquations3D(const ExtMatrix3D &_ratios) : ratios(_ratios) {}
+    SystemLinearEquations3D(const Matrix4x4 &_ratios) : ratios(_ratios) {}
     virtual bool calculateSolution(double *solution, unsigned int &size) = 0;
 };
 
@@ -27,13 +27,11 @@ private:
         if (row1 == row2) return;
 
         unsigned int size = ratios.getColums();
-        double *tmp_row = new double[size];
+        double tmp_row[4];
 
         for (unsigned int col = 0; col < size; col++) tmp_row[col] = ratios.getIndex(row1, col);
         for (unsigned int col = 0; col < size; col++) ratios.setIndex(row1, col, ratios.getIndex(row2, col));
         for (unsigned int col = 0; col < size; col++) ratios.setIndex(row2, col, tmp_row[col]);
-
-        delete []tmp_row;
     }
     unsigned int directAction() // make all coefficients equal to zero which are below the main diagonal
     {
@@ -92,7 +90,7 @@ private:
         }
     }
 public:
-    SystemLinearEquations3D_SolutionGauss(const ExtMatrix3D &_ratios) : SystemLinearEquations3D(_ratios) {}
+    SystemLinearEquations3D_SolutionGauss(const Matrix4x4 &_ratios) : SystemLinearEquations3D(_ratios) {}
 
     bool calculateSolution(double *solution, unsigned int &size)
     {
