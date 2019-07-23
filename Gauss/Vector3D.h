@@ -14,20 +14,17 @@ private:
     double X;
     double Y;
     double Z;
-    unsigned int size;
 
 public:
-    Vector3D() : X(0), Y(0), Z(0), size(3) {}
-    Vector3D(double x, double y, double z) : size(3) { setParam(0, x); setParam(1, y); setParam(2, z); }
+    Vector3D() : X(0), Y(0), Z(0) {}
+    Vector3D(double x, double y, double z) {X = x; Y = y; Z = z; }
     Vector3D(const Vector3D &v) { *this = v; }
     double getX() { return X; }
     double getY() { return Y; }
     double getZ() { return Z; }
-    double getSize() const { return size; }
     double getLenght() { return sqrt(X*X + Y*Y + Z*Z); }
     double getParam(unsigned int index) const
     {
-        if (index >= size) throw Exception(Exception::VECTOR3D_OUT_RANGE);
         double val;
         switch(index)
         {
@@ -40,12 +37,11 @@ public:
     }
     void setParam(unsigned int index, double val)
     {
-        if (index >= size) throw Exception(Exception::VECTOR3D_OUT_RANGE);
         switch(index)
         {
-        case 0: X = equal_real(val, 0) ? 0 : val; break;
-        case 1: Y = equal_real(val, 0) ? 0 : val; break;
-        case 2: Z = equal_real(val, 0) ? 0 : val; break;
+        case 0: X = val; break;
+        case 1: Y = val; break;
+        case 2: Z = val; break;
         default: throw Exception(Exception::VECTOR3D_OUT_RANGE);
         }
     }
@@ -66,8 +62,7 @@ public:
     Vector3D& operator=(const Vector3D &v)
     {
         if (this == &v) return *this;
-        size = v.size;
-        for (unsigned int i = 0; i < size; i++) setParam(i, v.getParam(i));
+        X = v.X; Y = v.Y; Z = v.Z;
         return *this;
     }
     Vector3D operator+(const Vector3D &v) const { return Vector3D(X+v.X, Y+v.Y, Z+v.Z); }

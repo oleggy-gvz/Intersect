@@ -84,9 +84,6 @@ public:
         if (!isInsideSegment(point) || !s.isInsideSegment(point)) return 1;
         return 0;
     }
-    friend ostream& operator<<(ostream &, const Segment3D_Ext &);
 };
-
-ostream& operator<<(ostream &out, const Segment3D_Ext &s) { out << s.start << " -> " << s.end; return out; }
 
 #endif // SEGMENT_3D_EXTENTION_H

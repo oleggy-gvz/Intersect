@@ -1,6 +1,6 @@
 #include "Segment3D.h"
 
-//#define MATRIX_4x4
+#define MATRIX_4x4
 
 #ifdef MATRIX_4x4
 #include "Matrix4x4\SysLinearEquat3D.h"
@@ -29,6 +29,7 @@ int Intersect(const Segment3D &s1, const Segment3D &s2, Vector3D &point)
     double res[4];
     unsigned int size;
     if (!intersect.calculateSolution(res, size)) return 2;
+    if (size < 3) return 3;
     for (unsigned int i = 0; i < size; i++) point.setParam(i, res[i]);
 
     if (!s1.isLyingOnSegment(point) || !s2.isLyingOnSegment(point)) return 1;
@@ -55,9 +56,11 @@ int Intersect(const Segment3D &s1, const Segment3D &s2, Vector3D &point)
                    b.getY() * B.getX() - b.getX() * B.getY(),
                    b.getZ() * B.getY() - b.getY() * B.getZ()};
 
+    unsigned int size;
     SystemLinearEquations3D_SolutionGauss intersect(M, res);
 
-    if (!intersect.calculateSolution(point)) return 2;
+    if (!intersect.calculateSolution(point, size)) return 2;
+    if (size < 3) return 3;
 
     if (!s1.isLyingOnSegment(point) || !s2.isLyingOnSegment(point)) return 1;
 
@@ -79,6 +82,7 @@ void printResultIntersect(const Segment3D &s1, const Segment3D &s2)
         {
         case 1: cout << "no intersect: point of intersection " << point << " is outside the boundaries of the segments" << endl; break;
         case 2: cout << "no intersect: lines is not belong to a common surface" << endl; break;
+        case 3: cout << "no intersect: non-3D case" << endl; break;
         case -1: cout << "no solutions: lines belong to a common line" << endl; break;
         case -2: cout << "no solutions: lines is parallel" << endl; break;
         }

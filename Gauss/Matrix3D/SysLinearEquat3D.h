@@ -15,7 +15,7 @@ public:
         for (unsigned int row = 0; row < ratios.getRows(); row++)
             result[row] = res[row];
     }
-    virtual bool calculateSolution(Vector3D &solution) = 0;
+    virtual bool calculateSolution(Vector3D &solution, unsigned int &size) = 0;
 };
 
 class SystemLinearEquations3D_SolutionGauss : public SystemLinearEquations3D // solving a system of linear equations: ratios * x = result
@@ -82,7 +82,7 @@ private:
     }
 public:
     SystemLinearEquations3D_SolutionGauss(const Matrix3D &_ratios, double *_result) : SystemLinearEquations3D(_ratios, _result) {}
-    bool calculateSolution(Vector3D &solution)
+    bool calculateSolution(Vector3D &solution, unsigned int &size)
     {
         unsigned int rank = directAction();
         reversAction(rank);
@@ -91,7 +91,9 @@ public:
         for (unsigned int row = rank; row < ratios.getRows(); row++)
             if (!equal_real(result[row], 0)) return false; // rank (ratios) != rank (ratios | result)
 
-        for (unsigned int i = 0; i < rank; i++) solution.setParam(i, result[i]);
+        for (unsigned int row = 0; row < rank; row++) solution.setParam(row, result[row]);
+        size = rank;
+
         return true;
     }
 };
