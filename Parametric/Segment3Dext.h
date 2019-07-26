@@ -34,19 +34,6 @@ private:
         return ratio;
     }
 
-    bool isInsideSegment(const Vector3D &point) const
-    {
-        Ratio ratio = getRatio(point);
-        Ratio ratio_start = getRatio(start);
-        Ratio ratio_end = getRatio(end);
-        bool res;
-        if (ratio.isX)      res = less_or_equal_real(ratio_start.x, ratio.x) && less_or_equal_real(ratio.x, ratio_end.x);
-        else if (ratio.isY) res = less_or_equal_real(ratio_start.y, ratio.y) && less_or_equal_real(ratio.y, ratio_end.y);
-        else if (ratio.isZ) res = less_or_equal_real(ratio_start.z, ratio.z) && less_or_equal_real(ratio.z, ratio_end.z);
-        else                res = less_or_equal_real(ratio_start.x, ratio.x) && less_or_equal_real(ratio.x, ratio_end.x); // any axis
-        return res;
-    }
-
     bool ratioIntersect(double a1, double a2, double b1, double b2, double dif1, double dif2, double &ratio) const
     {
         bool res = false; // mark empty ratio
@@ -73,7 +60,7 @@ public:
     Segment3D_Ext(const Segment3D &s) : Segment3D(s.getStart(), s.getEnd())
     {}
 
-    int Intersect(const Segment3D_Ext &s, Vector3D &point) const
+    int Intersect(const Segment3D_Ext &s, Vector3D &point)
     {
         if (isCollinearity(s)) return -1; // lines belong to a common line
         if (isParallel(s)) return -2; // lines is parallel
@@ -83,6 +70,19 @@ public:
 
         if (!isInsideSegment(point) || !s.isInsideSegment(point)) return 1;
         return 0;
+    }
+
+    bool isInsideSegment(const Vector3D &point) const
+    {
+        Ratio ratio = getRatio(point);
+        Ratio ratio_start = getRatio(start);
+        Ratio ratio_end = getRatio(end);
+        bool res;
+        if (ratio.isX)      res = less_or_equal_real(ratio_start.x, ratio.x) && less_or_equal_real(ratio.x, ratio_end.x);
+        else if (ratio.isY) res = less_or_equal_real(ratio_start.y, ratio.y) && less_or_equal_real(ratio.y, ratio_end.y);
+        else if (ratio.isZ) res = less_or_equal_real(ratio_start.z, ratio.z) && less_or_equal_real(ratio.z, ratio_end.z);
+        else                res = less_or_equal_real(ratio_start.x, ratio.x) && less_or_equal_real(ratio.x, ratio_end.x); // any axis
+        return res;
     }
 };
 

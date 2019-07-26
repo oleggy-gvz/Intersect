@@ -1,6 +1,6 @@
 #include "Segment3D.h"
 
-//#define MATRIX_4x4
+#define MATRIX_4x4
 
 #ifdef MATRIX_4x4
 #include "Matrix4x4\SysLinearEquat3D.h"
@@ -104,8 +104,11 @@ int main()
     Segment3D s1 = {{1, 1, 1}, {2, 2, 2}}, s2 = {{-3, -3, -3}, {-4, -4, -4}};
     printResultIntersect(s1, s2);
     cout << endl;
-    //Vector3D p = {2.1, 2.1, 2.1};
-    //bool b = s1.isLyingOnSegment(p);
+
+    Vector3D p = {2.1, 2.1, 2.1};
+    if (s1.isLyingOnSegment(p)) cout << p << " - lying on segment: " << s1 << endl;
+    else cout << p << " - not lying on segment: " << s1 << endl;
+    cout << endl;
 
     s1 = {{1, 1, 0}, {2, 2, 0}};
     s2 = {{2, 1, 0}, {3, 2, 0}};

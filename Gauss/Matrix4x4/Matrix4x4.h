@@ -53,7 +53,7 @@ public:
         else if (rows == 4 && cols == 4) { return det_4(0, 1, 2, 3, 0, 1, 2, 3); }
         else { throw Exception(Exception::MATRIX_SIZE_FOR_DET); }
     }
-    Matrix4x4& operator=(const Matrix4x4 &m)
+    const Matrix4x4& operator=(const Matrix4x4 &m)
     {
         if (this == &m) return *this;
         rows = m.rows; cols = m.cols;
