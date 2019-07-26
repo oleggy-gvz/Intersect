@@ -1,6 +1,6 @@
 #include "Segment3D.h"
 
-#define MATRIX_4x4
+//#define MATRIX_4x4
 
 #ifdef MATRIX_4x4
 #include "Matrix4x4\SysLinearEquat3D.h"

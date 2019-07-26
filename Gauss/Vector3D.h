@@ -59,7 +59,7 @@ public:
         else res = equal_real(X / v.X, Y / v.Y) && equal_real(Y / v.Y, Z / v.Z); // any other cases
         return res;
     }
-    Vector3D& operator=(const Vector3D &v)
+    const Vector3D& operator=(const Vector3D &v)
     {
         if (this == &v) return *this;
         X = v.X; Y = v.Y; Z = v.Z;
@@ -70,7 +70,6 @@ public:
     Vector3D operator*(double k) const { return Vector3D(X * k, Y * k, Z * k); }
     Vector3D operator/(double k) const { return Vector3D(X / k, Y / k, Z / k); }
     Vector3D operator*(const Vector3D &v) const { return Vector3D(Y * v.Z - v.Y * Z, -X * v.Z + v.X * Z, X * v.Y - v.X * Y); }
-    Vector3D operator+=(const Vector3D &v) { Vector3D tmp = *this; *this = *this + v; return tmp; }
     bool operator==(const Vector3D &v) const { return equal_real(X, v.X) && equal_real(Y, v.Y) && equal_real(Z, v.Z); }
     friend ostream& operator<<(ostream &, const Vector3D &);
 };
