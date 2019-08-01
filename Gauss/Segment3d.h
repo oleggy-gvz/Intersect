@@ -31,7 +31,7 @@ public:
         double len = getDirection().getLenght();
         return more_or_equal_real(len, vec1.getLenght()) && more_or_equal_real(len, vec2.getLenght());
     }
-    double getLeght()
+    double getLeght() const
     {
         return getDirection().getLenght();
     }

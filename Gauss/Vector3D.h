@@ -15,10 +15,11 @@ private:
     double Y;
     double Z;
 
+    void set(const Vector3D &v) { if (this == &v) return; X = v.X; Y = v.Y; Z = v.Z; }
 public:
     Vector3D() : X(0), Y(0), Z(0) {}
     Vector3D(double x, double y, double z) {X = x; Y = y; Z = z; }
-    Vector3D(const Vector3D &v) { *this = v; }
+    Vector3D(const Vector3D &v) { set(v); }
     double getX() { return X; }
     double getY() { return Y; }
     double getZ() { return Z; }
@@ -59,22 +60,29 @@ public:
         else res = equal_real(X / v.X, Y / v.Y) && equal_real(Y / v.Y, Z / v.Z); // any other cases
         return res;
     }
-    const Vector3D& operator=(const Vector3D &v)
-    {
-        if (this == &v) return *this;
-        X = v.X; Y = v.Y; Z = v.Z;
-        return *this;
-    }
+    const Vector3D& operator=(const Vector3D &v) { set(v); return *this; }
     Vector3D operator*(double k) { return Vector3D(X * k, Y * k, Z * k); }
     Vector3D operator/(double k) { return Vector3D(X / k, Y / k, Z / k); }
 
-    const Vector3D operator+(const Vector3D &v) const { return Vector3D(X+v.X, Y+v.Y, Z+v.Z); }
-    Vector3D operator-(const Vector3D &v) const { return Vector3D(X-v.X, Y-v.Y, Z-v.Z); }
-    Vector3D operator*(const Vector3D &v) const { return Vector3D(Y * v.Z - v.Y * Z, -X * v.Z + v.X * Z, X * v.Y - v.X * Y); }
+    //Vector3D operator+(const Vector3D &v) const { return Vector3D(X+v.X, Y+v.Y, Z+v.Z); }
+    friend const Vector3D operator+(const Vector3D &left, const Vector3D &rigth);
+    //Vector3D operator-(const Vector3D &v) const { return Vector3D(X-v.X, Y-v.Y, Z-v.Z); }
+    friend const Vector3D operator-(const Vector3D &left, const Vector3D &rigth);
+    //Vector3D operator*(const Vector3D &v) const { return Vector3D(Y * v.Z - v.Y * Z, -X * v.Z + v.X * Z, X * v.Y - v.X * Y); }
+    friend const Vector3D operator*(const Vector3D &left, const Vector3D &rigth);
 
     bool operator==(const Vector3D &v) { return equal_real(X, v.X) && equal_real(Y, v.Y) && equal_real(Z, v.Z); }
     friend ostream& operator<<(ostream &, const Vector3D &);
 };
+
+const Vector3D operator+(const Vector3D &left, const Vector3D &rigth) { return Vector3D(left.X+rigth.X, left.Y+rigth.Y, left.Z+rigth.Z); }
+
+const Vector3D operator-(const Vector3D &left, const Vector3D &rigth) { return Vector3D(left.X-rigth.X, left.Y-rigth.Y, left.Z-rigth.Z); }
+
+const Vector3D operator*(const Vector3D &left, const Vector3D &rigth)
+{
+    return Vector3D(left.Y * rigth.Z - rigth.Y * left.Z, -left.X * rigth.Z + rigth.X * left.Z, left.X * rigth.Y - rigth.X * left.Y);
+}
 
 ostream& operator<<(ostream &out, const Vector3D &v)
 {
